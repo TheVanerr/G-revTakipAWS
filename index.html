@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>İş Takip Sistemi</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="/_sdk/element_sdk.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
   <style>
@@ -610,6 +611,11 @@
     // Central task store: canonicalId → array of task objects
     const taskStore = {};
 
+    // ─── Supabase ───────────────────────────────────────────────
+    const SUPABASE_URL  = 'https://fkwuyvuedubmfsgvkkqk.supabase.co';
+    const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZrd3V5dnVlZHVibWZzZ3Zra3FrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5NzkyOTYsImV4cCI6MjA4NzU1NTI5Nn0.tDET63g6SrqLQFA4ML8JQRMhTKjtCxmKnR-F9Y5V4gM';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
     // ─── User data ────────────────────────────────────────────
     const users = {
       fatih:    { name: 'Fatih GÜRAL',    initials: 'FG', gradient: 'from-blue-500 to-cyan-500',     role: 'Montaj Teknisyeni' },
@@ -760,23 +766,25 @@
       currentDeleteTaskId = null;
     }
 
-    function confirmDeleteTask() {
+    async function confirmDeleteTask() {
       if (currentDeleteTaskId !== null) {
         const taskId = currentDeleteTaskId;
+        const canonicalId = getCanonicalOwnerOfTask(taskId);
+        if (canonicalId && taskStore[canonicalId]) {
+          const task = taskStore[canonicalId].find(t => t.id === taskId);
+          if (task && task.dbId) await sb.from('gorevler').delete().eq('id', task.dbId);
+          taskStore[canonicalId] = taskStore[canonicalId].filter(t => t.id !== taskId);
+        }
         const pageCard    = document.getElementById('task-card-'    + taskId);
         const profileCard = document.getElementById('profile-task-' + taskId);
         if (pageCard)    pageCard.remove();
         if (profileCard) profileCard.remove();
-        const canonicalId = getCanonicalOwnerOfTask(taskId);
-        if (canonicalId && taskStore[canonicalId]) {
-          taskStore[canonicalId] = taskStore[canonicalId].filter(t => t.id !== taskId);
-        }
         if (currentViewedUserId) refreshUserProfile();
       }
       closeTaskDeleteModal();
     }
 
-    function submitTask(event) {
+    async function submitTask(event) {
       event.preventDefault();
       const pageUserId  = document.getElementById('task-user-id').value;
       const description = document.getElementById('task-description').value;
@@ -789,7 +797,9 @@
         // ── Edit mode ──
         const taskId = currentEditTaskId;
         const entry  = taskStore[canonicalId]?.find(t => t.id === taskId);
-        if (entry) { entry.desc = description; entry.date = date; entry.time = time; }
+        if (entry) { entry.desc = description; entry.date = date; entry.time = time;
+          if (entry.dbId) await sb.from('gorevler').update({ aciklama: description, tarih: date, saat: time + ':00' }).eq('id', entry.dbId);
+        }
         const pc  = document.getElementById('task-card-'    + taskId);
         const prc = document.getElementById('profile-task-' + taskId);
         if (pc)  { pc.querySelector('.task-desc').textContent = description; pc.querySelector('.task-datetime').textContent = formatDate(date) + ' - ' + time; const cdPc = pc.querySelector('[data-deadline]'); if (cdPc) cdPc.dataset.deadline = date + 'T' + time + ':00'; }
@@ -804,6 +814,17 @@
       const taskId  = taskCounter;
       const taskObj = { id: taskId, desc: description, date, time, pageUserId };
       taskStore[canonicalId].push(taskObj);
+
+      // Supabase insert
+      sb.from('gorevler').insert({ kullanici_id: canonicalId, sayfa_kullanici_id: pageUserId, aciklama: description, tarih: date, saat: time + ':00' }).select().then(({ data }) => {
+        if (data && data[0]) {
+          taskObj.dbId = data[0].id;
+          const c1 = document.getElementById('task-card-' + taskId);
+          const c2 = document.getElementById('profile-task-' + taskId);
+          if (c1) c1.dataset.dbid = data[0].id;
+          if (c2) c2.dataset.dbid = data[0].id;
+        }
+      });
 
       // Render card on the team page
       const pageContainer = document.getElementById('tasks-' + pageUserId);
@@ -864,6 +885,192 @@
     setInterval(tickCountdowns, 1000);
     setTimeout(tickCountdowns, 100);
 
+    // ─── Supabase: Tüm veriyi yükleme ───────────────────────────────
+    async function loadAllData() {
+      // ─ Görevler
+      const { data: gorevler } = await sb.from('gorevler').select('*').order('id');
+      if (gorevler) {
+        for (const g of gorevler) {
+          taskCounter++;
+          const taskId = taskCounter;
+          const t = g.saat ? g.saat.substring(0,5) : '00:00';
+          const canonId = getCanonicalId(g.kullanici_id);
+          const pageUId  = g.sayfa_kullanici_id || g.kullanici_id;
+          const taskObj  = { id: taskId, desc: g.aciklama, date: g.tarih, time: t, pageUserId: pageUId, dbId: g.id };
+          if (!taskStore[canonId]) taskStore[canonId] = [];
+          taskStore[canonId].push(taskObj);
+          const pageContainer = document.getElementById('tasks-' + pageUId);
+          if (pageContainer) {
+            const tc = document.createElement('div');
+            tc.id = 'task-card-' + taskId;
+            tc.dataset.dbid = g.id;
+            tc.className = 'task-card bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 hover:border-violet-500/30 transition-all';
+            tc.innerHTML = `
+              <div class="flex items-start justify-between gap-2 mb-2">
+                <p class="task-desc text-sm">${g.aciklama}</p>
+                <div class="flex gap-1 flex-shrink-0">
+                  <button onclick="editTask(${taskId})" class="p-1 hover:bg-white/10 rounded-lg transition-all text-blue-400 hover:text-blue-300" title="Düzenle"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
+                  <button onclick="openTaskDeleteModal(${taskId})" class="p-1 hover:bg-white/10 rounded-lg transition-all text-red-400 hover:text-red-300" title="Sil"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 text-xs text-gray-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span class="task-datetime">${formatDate(g.tarih)} - ${t}</span>
+              </div>
+              <div class="flex items-center gap-1.5 text-xs text-yellow-400 mt-1">
+                <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span data-deadline="${g.tarih}T${t}:00">—</span>
+              </div>`;
+            pageContainer.appendChild(tc);
+          }
+        }
+      }
+
+      // ─ Makineler
+      const { data: makineler } = await sb.from('makineler').select('*').order('id');
+      if (makineler) {
+        for (const m of makineler) {
+          makineCounter++;
+          const cardId = 'makine-card-' + makineCounter;
+          const t = m.bitis_saat ? m.bitis_saat.substring(0,5) : '00:00';
+          const container = document.getElementById('makine-cards');
+          const card = document.createElement('div');
+          card.id = cardId; card.dataset.dbid = m.id; card.dataset.cardtype = 'makineler';
+          card.dataset.seri = m.seri; card.dataset.model = m.model; card.dataset.firma = m.firma;
+          card.dataset.tarih = m.bitis_tarih; card.dataset.saat = t;
+          card.className = 'task-card bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 hover:border-violet-500/30 transition-all w-full';
+          card.innerHTML = `
+            <div class="p-6">
+              <div class="flex items-start justify-between gap-4 mb-4">
+                <div class="flex flex-wrap gap-6">
+                  <div><p class="text-xs text-gray-400 mb-1">Seri Numarası</p><p class="mk-seri font-semibold text-violet-300">${m.seri}</p></div>
+                  <div><p class="text-xs text-gray-400 mb-1">Makine Modeli</p><p class="mk-model font-semibold">${m.model}</p></div>
+                  <div><p class="text-xs text-gray-400 mb-1">Alıcı Firma</p><p class="mk-firma font-semibold text-fuchsia-300">${m.firma}</p></div>
+                  <div><p class="text-xs text-gray-400 mb-1">Bitiş Tarihi / Saati</p><p class="mk-tarih font-semibold">${formatDate(m.bitis_tarih)} — ${t}</p></div>
+                  <div><p class="text-xs text-gray-400 mb-1">Kalan Süre</p><p class="text-yellow-400 text-sm font-medium flex items-center gap-1"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span data-deadline="${m.bitis_tarih}T${t}:00">—</span></p></div>
+                </div>
+                <div class="flex gap-1 flex-shrink-0">
+                  <button onclick="editMakine('${cardId}')" class="p-1.5 hover:bg-white/10 rounded-lg transition-all text-blue-400 hover:text-blue-300" title="Düzenle"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
+                  <button onclick="openMakineDeleteModal('${cardId}')" class="p-1.5 hover:bg-white/10 rounded-lg transition-all text-red-400 hover:text-red-300" title="Sil"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                </div>
+              </div>
+              <div class="border-t border-white/10 pt-4 flex gap-6">
+                <div class="flex-1">
+                  <button onclick="openHataRevizeModal('hata','${cardId}')" class="flex items-center gap-1 bg-red-600/80 hover:bg-red-600 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Hata Ekle</button>
+                  <div id="hatalar-${cardId}" class="mt-2 space-y-1"></div>
+                </div>
+                <div class="flex-1 text-right">
+                  <button onclick="openHataRevizeModal('revize','${cardId}')" class="flex items-center gap-1 bg-amber-600/80 hover:bg-amber-600 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ml-auto"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Revize Ekle</button>
+                  <div id="revizeler-${cardId}" class="mt-2 space-y-1"></div>
+                </div>
+              </div>
+            </div>`;
+          container.appendChild(card);
+        }
+      }
+
+      // ─ Servis
+      const { data: servisler } = await sb.from('servis').select('*').order('id');
+      if (servisler) {
+        for (const s of servisler) {
+          servisCounter++;
+          const cardId = 'servis-card-' + servisCounter;
+          const container = document.getElementById('servis-cards');
+          const card = document.createElement('div');
+          card.id = cardId; card.dataset.dbid = s.id; card.dataset.cardtype = 'servis';
+          card.dataset.seri = s.seri; card.dataset.model = s.model; card.dataset.sirket = s.sirket;
+          card.dataset.ariza = s.ariza; card.dataset.cozum = s.cozum;
+          card.className = 'task-card bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 hover:border-green-500/30 transition-all w-full';
+          card.innerHTML = `
+            <div class="p-6">
+              <div class="flex items-start justify-between gap-4 mb-4">
+                <div class="flex flex-wrap gap-6">
+                  <div><p class="text-xs text-gray-400 mb-1">Seri Numarası</p><p class="sv-seri font-semibold text-green-300">${s.seri}</p></div>
+                  <div><p class="text-xs text-gray-400 mb-1">Makine Modeli</p><p class="sv-model font-semibold">${s.model}</p></div>
+                  <div><p class="text-xs text-gray-400 mb-1">Şirket</p><p class="sv-sirket font-semibold text-emerald-300">${s.sirket}</p></div>
+                </div>
+                <div class="flex gap-1 flex-shrink-0">
+                  <button onclick="editServis('${cardId}')" class="p-1.5 hover:bg-white/10 rounded-lg transition-all text-blue-400 hover:text-blue-300" title="Düzenle"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
+                  <button onclick="openMakineDeleteModal('${cardId}')" class="p-1.5 hover:bg-white/10 rounded-lg transition-all text-red-400 hover:text-red-300" title="Sil"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                </div>
+              </div>
+              <div class="grid sm:grid-cols-2 gap-4 border-t border-white/10 pt-4">
+                <div class="bg-red-900/20 border border-red-500/20 rounded-xl p-4"><p class="text-xs text-red-400 font-semibold mb-2 uppercase tracking-wide">⚠ Yaşanan Arıza</p><p class="sv-ariza text-sm">${s.ariza}</p></div>
+                <div class="bg-green-900/20 border border-green-500/20 rounded-xl p-4"><p class="text-xs text-green-400 font-semibold mb-2 uppercase tracking-wide">✓ Nasıl Çözüldü</p><p class="sv-cozum text-sm">${s.cozum}</p></div>
+              </div>
+            </div>`;
+          container.appendChild(card);
+        }
+      }
+
+      // ─ Yazılım
+      const { data: yazilimlar } = await sb.from('yazilim').select('*').order('id');
+      if (yazilimlar) {
+        for (const y of yazilimlar) {
+          yazilimCounter++;
+          const cardId = 'yazilim-card-' + yazilimCounter;
+          const container = document.getElementById('yazilim-cards');
+          const card = document.createElement('div');
+          card.id = cardId; card.dataset.dbid = y.id; card.dataset.cardtype = 'yazilim';
+          card.dataset.seri = y.seri; card.dataset.model = y.model; card.dataset.firma = y.firma;
+          card.className = 'task-card bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 hover:border-indigo-500/30 transition-all w-full';
+          card.innerHTML = `
+            <div class="p-6">
+              <div class="flex items-start justify-between gap-4 mb-4">
+                <div class="flex flex-wrap gap-6">
+                  <div><p class="text-xs text-gray-400 mb-1">Seri Numarası</p><p class="yz-seri font-semibold text-indigo-300">${y.seri}</p></div>
+                  <div><p class="text-xs text-gray-400 mb-1">Makine Modeli</p><p class="yz-model font-semibold">${y.model}</p></div>
+                  <div><p class="text-xs text-gray-400 mb-1">Alıcı Firma</p><p class="yz-firma font-semibold text-purple-300">${y.firma}</p></div>
+                </div>
+                <div class="flex gap-1 flex-shrink-0">
+                  <button onclick="editYazilim('${cardId}')" class="p-1.5 hover:bg-white/10 rounded-lg transition-all text-blue-400 hover:text-blue-300" title="Düzenle"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
+                  <button onclick="openMakineDeleteModal('${cardId}')" class="p-1.5 hover:bg-white/10 rounded-lg transition-all text-red-400 hover:text-red-300" title="Sil"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                </div>
+              </div>
+              <div class="border-t border-white/10 pt-4 flex gap-6">
+                <div class="flex-1">
+                  <button onclick="openHataRevizeModal('hata','${cardId}')" class="flex items-center gap-1 bg-red-600/80 hover:bg-red-600 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Hata Ekle</button>
+                  <div id="hatalar-${cardId}" class="mt-2 space-y-1"></div>
+                </div>
+                <div class="flex-1 text-right">
+                  <button onclick="openHataRevizeModal('revize','${cardId}')" class="flex items-center gap-1 bg-amber-600/80 hover:bg-amber-600 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ml-auto"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Revize Ekle</button>
+                  <div id="revizeler-${cardId}" class="mt-2 space-y-1"></div>
+                </div>
+              </div>
+            </div>`;
+          container.appendChild(card);
+        }
+      }
+
+      // ─ Hata & Revize (kartlar render edildikten sonra)
+      const { data: hrItems } = await sb.from('hata_revize').select('*').order('id');
+      if (hrItems) {
+        for (const h of hrItems) {
+          hataRevizeItemCounter++;
+          const itemId = 'hr-item-' + hataRevizeItemCounter;
+          const isHata = h.tip === 'hata';
+          const containerId = (isHata ? 'hatalar-' : 'revizeler-') + h.kart_id;
+          const list = document.getElementById(containerId);
+          if (!list) continue;
+          const item = document.createElement('div');
+          item.id = itemId; item.dataset.dbid = h.id; item.dataset.desc = h.aciklama; item.dataset.type = h.tip;
+          item.className = `flex items-center gap-2 text-xs p-2 rounded-lg ${isHata ? 'bg-red-900/30 border border-red-500/30' : 'bg-amber-900/30 border border-amber-500/30'}`;
+          item.innerHTML = `
+            <span class="flex-shrink-0 ${isHata ? 'text-red-400' : 'text-amber-400'}">${isHata ? '⚠' : '↺'}</span>
+            <span class="hr-desc flex-1">${h.aciklama}</span>
+            <div class="flex gap-1 flex-shrink-0">
+              <button onclick="editHataRevizeItem('${itemId}')" class="p-1 hover:bg-white/10 rounded transition-all text-blue-400 hover:text-blue-300" title="Düzenle"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
+              <button onclick="openItemDeleteModal('${itemId}')" class="p-1 hover:bg-white/10 rounded transition-all text-red-400 hover:text-red-300" title="Sil"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+            </div>`;
+          list.appendChild(item);
+        }
+      }
+
+      tickCountdowns();
+    }
+
+    document.addEventListener('DOMContentLoaded', loadAllData);
+
     // ─── Servis ───────────────────────────────────────────────
     let servisCounter = 0;
     let currentEditServisId = null;
@@ -909,6 +1116,7 @@
         card.querySelector('.sv-sirket').textContent = sirket;
         card.querySelector('.sv-ariza').textContent  = ariza;
         card.querySelector('.sv-cozum').textContent  = cozum;
+        if (card.dataset.dbid) sb.from('servis').update({ seri, model, sirket, ariza, cozum }).eq('id', card.dataset.dbid);
         closeServisModal(); return;
       }
 
@@ -920,6 +1128,7 @@
       card.className = 'task-card bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 hover:border-green-500/30 transition-all w-full';
       card.dataset.seri = seri; card.dataset.model = model; card.dataset.sirket = sirket;
       card.dataset.ariza = ariza; card.dataset.cozum = cozum;
+      card.dataset.cardtype = 'servis';
       card.innerHTML = `
         <div class="p-6">
           <div class="flex items-start justify-between gap-4 mb-4">
@@ -949,6 +1158,9 @@
           </div>
         </div>`;
       container.appendChild(card);
+      sb.from('servis').insert({ seri, model, sirket, ariza, cozum }).select().then(({ data }) => {
+        if (data && data[0]) card.dataset.dbid = data[0].id;
+      });
       closeServisModal();
     }
 
@@ -990,6 +1202,7 @@
         card.querySelector('.yz-seri').textContent  = seri;
         card.querySelector('.yz-model').textContent = model;
         card.querySelector('.yz-firma').textContent = firma;
+        if (card.dataset.dbid) sb.from('yazilim').update({ seri, model, firma }).eq('id', card.dataset.dbid);
         closeYazilimModal(); return;
       }
 
@@ -1002,11 +1215,8 @@
       card.dataset.seri  = seri;
       card.dataset.model = model;
       card.dataset.firma = firma;
+      card.dataset.cardtype = 'yazilim';
       card.innerHTML = `
-        <div class="p-6">
-          <div class="flex items-start justify-between gap-4 mb-4">
-            <div class="flex flex-wrap gap-6">
-              <div><p class="text-xs text-gray-400 mb-1">Seri Numarası</p><p class="yz-seri font-semibold text-indigo-300">${seri}</p></div>
               <div><p class="text-xs text-gray-400 mb-1">Makine Modeli</p><p class="yz-model font-semibold">${model}</p></div>
               <div><p class="text-xs text-gray-400 mb-1">Alıcı Firma</p><p class="yz-firma font-semibold text-purple-300">${firma}</p></div>
             </div>
@@ -1035,6 +1245,9 @@
           </div>
         </div>`;
       container.appendChild(card);
+      sb.from('yazilim').insert({ seri, model, firma }).select().then(({ data }) => {
+        if (data && data[0]) card.dataset.dbid = data[0].id;
+      });
       closeYazilimModal();
     }
 
@@ -1090,11 +1303,14 @@
       currentDeleteMakineId = null;
     }
 
-    function verifyMakineDelete() {
+    async function verifyMakineDelete() {
       const pwd = document.getElementById('makine-delete-password').value;
       if (pwd === '112263') {
         if (currentDeleteMakineId) {
           const card = document.getElementById(currentDeleteMakineId);
+          if (card && card.dataset.dbid && card.dataset.cardtype) {
+            await sb.from(card.dataset.cardtype).delete().eq('id', card.dataset.dbid);
+          }
           if (card) card.remove();
         }
         closeMakineDeleteModal();
@@ -1139,6 +1355,7 @@
       card.dataset.firma = firma;
       card.dataset.tarih = tarih;
       card.dataset.saat  = saat;
+      card.dataset.cardtype = 'makineler';
       card.innerHTML = `
         <div class="p-6">
           <div class="flex items-start justify-between gap-4 mb-4">
@@ -1175,6 +1392,9 @@
         </div>
       `;
       container.appendChild(card);
+      sb.from('makineler').insert({ seri, model, firma, bitis_tarih: tarih, bitis_saat: saat + ':00' }).select().then(({ data }) => {
+        if (data && data[0]) card.dataset.dbid = data[0].id;
+      });
       closeMakineModal();
     }
 
@@ -1204,10 +1424,13 @@
       const modal = document.getElementById('item-delete-modal');
       modal.classList.add('hidden'); modal.classList.remove('flex');
     }
-    function confirmItemDelete() {
+    async function confirmItemDelete() {
       if (pendingDeleteItemId) {
         const el = document.getElementById(pendingDeleteItemId);
-        if (el) el.remove();
+        if (el) {
+          if (el.dataset.dbid) await sb.from('hata_revize').delete().eq('id', el.dataset.dbid);
+          el.remove();
+        }
       }
       closeItemDeleteModal();
     }
@@ -1318,6 +1541,7 @@
         if (item) {
           item.dataset.desc = desc;
           item.querySelector('.hr-desc').textContent = desc;
+          if (item.dataset.dbid) sb.from('hata_revize').update({ aciklama: desc }).eq('id', item.dataset.dbid);
         }
         currentEditHataRevizeItemId = null;
         closeHataRevizeModal(); return;
@@ -1346,6 +1570,10 @@
         </div>
       `;
       list.appendChild(item);
+      const kart_tipi = cardId.startsWith('makine') ? 'makine' : 'yazilim';
+      sb.from('hata_revize').insert({ kart_id: cardId, kart_tipi, tip: type, aciklama: desc }).select().then(({ data }) => {
+        if (data && data[0]) item.dataset.dbid = data[0].id;
+      });
       closeHataRevizeModal();
     }
   </script>
