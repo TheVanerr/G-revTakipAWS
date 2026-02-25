@@ -34,21 +34,40 @@
  </head>
  <body class="h-full bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white overflow-auto"><!-- Navbar -->
   <nav class="bg-black/30 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50">
-   <div class="max-w-7xl mx-auto px-4">
-    <div class="flex items-center justify-between h-16">
-     <div class="flex flex-wrap gap-1 sm:gap-2"><button onclick="showPage('giris')" class="nav-link active px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="giris">Giriş</button> <button onclick="showPage('kullanici')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="kullanici">Kullanıcı</button> <button onclick="showPage('montaj')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="montaj">Montaj</button> <button onclick="showPage('kaynak')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="kaynak">Kaynak</button> <button onclick="showPage('idare')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="idare">İdare</button> <button onclick="showPage('yonetim')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="yonetim">Yönetim</button> <button onclick="showPage('makine')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="makine">Makine</button> <button onclick="showPage('servis')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="servis">Servis</button> <button onclick="showPage('yazilim')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="yazilim">Yazılım</button>
-     </div><div class="flex items-center gap-2"><button id="makine-ekle-nav-btn" onclick="openMakineModal()" style="display:none" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg><span class="hidden sm:inline">Makine Ekle</span></button> <button id="servis-ekle-nav-btn" onclick="openServisModal()" style="display:none" class="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg><span class="hidden sm:inline">Servis Kaydı Ekle</span></button> <button id="yazilim-ekle-nav-btn" onclick="openYazilimModal()" style="display:none" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg><span class="hidden sm:inline">Yazılım Ekle</span></button> <button id="login-nav-btn" onclick="openLoginModal()" class="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
-      </svg><span class="hidden sm:inline">Giriş Yap</span> </button>
-     <div id="user-nav-info" class="hidden items-center gap-2">
-      <div class="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1.5">
-       <div id="nav-user-avatar" class="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-xs font-bold"></div>
-       <span id="nav-username" class="text-sm font-medium"></span>
-      </div>
-      <button onclick="doLogout()" class="p-2 hover:bg-white/10 rounded-lg transition-all text-gray-400 hover:text-white" title="Çıkış Yap">
-       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+   <style>.nav-scroll::-webkit-scrollbar{display:none}</style>
+   <div class="max-w-7xl mx-auto px-2 sm:px-4">
+    <div class="flex items-center gap-2 py-2">
+     <!-- Kaydırılabilir nav linkleri -->
+     <div class="nav-scroll flex-1 overflow-x-auto flex items-center gap-0.5" style="scrollbar-width:none;-ms-overflow-style:none">
+      <button onclick="showPage('giris')" class="nav-link active whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all hover:bg-white/10 flex-shrink-0" data-page="giris">Giriş</button>
+      <button onclick="showPage('kullanici')" class="nav-link whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all hover:bg-white/10 flex-shrink-0" data-page="kullanici">Kullanıcı</button>
+      <button onclick="showPage('montaj')" class="nav-link whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all hover:bg-white/10 flex-shrink-0" data-page="montaj">Montaj</button>
+      <button onclick="showPage('kaynak')" class="nav-link whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all hover:bg-white/10 flex-shrink-0" data-page="kaynak">Kaynak</button>
+      <button onclick="showPage('idare')" class="nav-link whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all hover:bg-white/10 flex-shrink-0" data-page="idare">İdare</button>
+      <button onclick="showPage('yonetim')" class="nav-link whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all hover:bg-white/10 flex-shrink-0" data-page="yonetim">Yönetim</button>
+      <button onclick="showPage('makine')" class="nav-link whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all hover:bg-white/10 flex-shrink-0" data-page="makine">Makine</button>
+      <button onclick="showPage('servis')" class="nav-link whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all hover:bg-white/10 flex-shrink-0" data-page="servis">Servis</button>
+      <button onclick="showPage('yazilim')" class="nav-link whitespace-nowrap px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all hover:bg-white/10 flex-shrink-0" data-page="yazilim">Yazılım</button>
+     </div>
+     <!-- Sağ: aksiyon + giriş alanı -->
+     <div class="flex items-center gap-1.5 flex-shrink-0">
+      <button id="makine-ekle-nav-btn" onclick="openMakineModal()" style="display:none" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 p-2 sm:px-3 sm:py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg><span class="hidden sm:inline">Makine Ekle</span></button>
+      <button id="servis-ekle-nav-btn" onclick="openServisModal()" style="display:none" class="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 p-2 sm:px-3 sm:py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg><span class="hidden sm:inline">Servis Ekle</span></button>
+      <button id="yazilim-ekle-nav-btn" onclick="openYazilimModal()" style="display:none" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 p-2 sm:px-3 sm:py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg><span class="hidden sm:inline">Yazılım Ekle</span></button>
+      <button id="login-nav-btn" class="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 p-2 sm:px-3 sm:py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1">
+       <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+       <span class="hidden sm:inline">Giriş Yap</span>
       </button>
-     </div></div>
+      <div id="user-nav-info" class="hidden items-center gap-1">
+       <div class="flex items-center gap-1.5 bg-white/10 rounded-lg px-2 py-1.5">
+        <div id="nav-user-avatar" class="w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-xs font-bold flex-shrink-0"></div>
+        <span id="nav-username" class="text-xs font-medium hidden sm:inline max-w-20 truncate"></span>
+       </div>
+       <button id="logout-nav-btn" class="p-1.5 hover:bg-white/10 rounded-lg transition-all text-gray-400 hover:text-white" title="Çıkış Yap">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+       </button>
+      </div>
+     </div>
     </div>
    </div>
   </nav>
@@ -1287,7 +1306,15 @@
       tickCountdowns();
     }
 
-    document.addEventListener('DOMContentLoaded', loadAllData);
+    document.addEventListener('DOMContentLoaded', function() {
+      loadAllData();
+      // Login/logout butonları — onclick yerine addEventListener kullanıyoruz
+      // (Netlify/VS Code SDK'nın onclick intercepting sorununu aşmak için)
+      const loginBtn  = document.getElementById('login-nav-btn');
+      const logoutBtn = document.getElementById('logout-nav-btn');
+      if (loginBtn)  loginBtn.addEventListener('click',  function(e){ e.stopPropagation(); openLoginModal(); });
+      if (logoutBtn) logoutBtn.addEventListener('click', function(e){ e.stopPropagation(); doLogout(); });
+    });
 
     // ─── Service Worker (PWA) ─────────────────────────────────
     if ('serviceWorker' in navigator) {
