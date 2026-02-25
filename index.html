@@ -1086,11 +1086,15 @@
     }
 
     // ─── OneSignal ────────────────────────────────────────────
-    // App ID buraya gelecek — onesignal.com'dan alındıktan sonra
     window.OneSignalDeferred = window.OneSignalDeferred || [];
-    // OneSignalDeferred.push(async (OneSignal) => {
-    //   await OneSignal.init({ appId: 'BURAYA_APP_ID' });
-    // });
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "492e47fe-5be9-42f4-8bb7-f32c4cc627fa",
+        safari_web_id: "web.onesignal.auto.66c6cf5f-f4e2-4fcc-bb6d-d84762ec1541",
+        notifyButton: { enable: true },
+        allowLocalhostAsSecureOrigin: true,
+      });
+    });
 
     // ─── Servis ───────────────────────────────────────────────
     let servisCounter = 0;
