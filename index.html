@@ -37,9 +37,18 @@
    <div class="max-w-7xl mx-auto px-4">
     <div class="flex items-center justify-between h-16">
      <div class="flex flex-wrap gap-1 sm:gap-2"><button onclick="showPage('giris')" class="nav-link active px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="giris">Giriş</button> <button onclick="showPage('kullanici')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="kullanici">Kullanıcı</button> <button onclick="showPage('montaj')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="montaj">Montaj</button> <button onclick="showPage('kaynak')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="kaynak">Kaynak</button> <button onclick="showPage('idare')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="idare">İdare</button> <button onclick="showPage('yonetim')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="yonetim">Yönetim</button> <button onclick="showPage('makine')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="makine">Makine</button> <button onclick="showPage('servis')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="servis">Servis</button> <button onclick="showPage('yazilim')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="yazilim">Yazılım</button>
-     </div><div class="flex items-center gap-2"><button id="makine-ekle-nav-btn" onclick="openMakineModal()" style="display:none" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg><span class="hidden sm:inline">Makine Ekle</span></button> <button id="servis-ekle-nav-btn" onclick="openServisModal()" style="display:none" class="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg><span class="hidden sm:inline">Servis Kaydı Ekle</span></button> <button id="yazilim-ekle-nav-btn" onclick="openYazilimModal()" style="display:none" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg><span class="hidden sm:inline">Yazılım Ekle</span></button> <button class="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2">
+     </div><div class="flex items-center gap-2"><button id="makine-ekle-nav-btn" onclick="openMakineModal()" style="display:none" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg><span class="hidden sm:inline">Makine Ekle</span></button> <button id="servis-ekle-nav-btn" onclick="openServisModal()" style="display:none" class="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg><span class="hidden sm:inline">Servis Kaydı Ekle</span></button> <button id="yazilim-ekle-nav-btn" onclick="openYazilimModal()" style="display:none" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg><span class="hidden sm:inline">Yazılım Ekle</span></button> <button id="login-nav-btn" onclick="openLoginModal()" class="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
-      </svg><span class="hidden sm:inline">Giriş Yap</span> </button></div>
+      </svg><span class="hidden sm:inline">Giriş Yap</span> </button>
+     <div id="user-nav-info" class="hidden items-center gap-2">
+      <div class="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1.5">
+       <div id="nav-user-avatar" class="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center text-xs font-bold"></div>
+       <span id="nav-username" class="text-sm font-medium"></span>
+      </div>
+      <button onclick="doLogout()" class="p-2 hover:bg-white/10 rounded-lg transition-all text-gray-400 hover:text-white" title="Çıkış Yap">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+      </button>
+     </div></div>
     </div>
    </div>
   </nav><!-- Giriş Sayfası -->
@@ -443,6 +452,39 @@
    </div>
   </div>
   <!-- Hata/Revize Öğe Silme Onay Modalı -->
+  <!-- Kullanıcı Giriş Modalı -->
+  <div id="login-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] hidden items-center justify-center">
+   <div class="bg-slate-900 rounded-2xl border border-white/20 p-8 w-full max-w-sm mx-4 animate-fade">
+    <div class="flex items-center justify-between mb-6">
+     <h3 class="text-xl font-semibold">Giriş Yap</h3>
+     <button onclick="closeLoginModal()" class="p-2 hover:bg-white/10 rounded-lg transition-all">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+     </button>
+    </div>
+    <form onsubmit="doLogin(event)" class="space-y-4">
+     <div>
+      <label class="block text-sm font-medium text-gray-300 mb-2">Kullanıcı Adı</label>
+      <input id="login-username" type="text" required autocomplete="username"
+        class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-violet-500 transition-all uppercase tracking-widest"
+        placeholder="FATIHGR">
+     </div>
+     <div>
+      <label class="block text-sm font-medium text-gray-300 mb-2">Şifre</label>
+      <div class="relative">
+       <input id="login-password" type="password" required autocomplete="current-password"
+         class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-violet-500 transition-all"
+         placeholder="••••••">
+       <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-3 text-gray-400 hover:text-white">
+        <svg id="eye-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+       </button>
+      </div>
+     </div>
+     <p id="login-error" class="hidden text-red-400 text-sm text-center">Kullanıcı adı veya şifre hatalı.</p>
+     <button type="submit" class="w-full py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 rounded-xl font-semibold transition-all mt-2">Giriş Yap</button>
+    </form>
+   </div>
+  </div>
+  <!-- Hata/Revize Öğe Silme Onay Modalı -->  
   <div id="item-delete-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center">
    <div class="bg-slate-900 rounded-2xl border border-white/20 p-6 w-full max-w-sm mx-4 animate-fade">
     <div class="flex items-center gap-3 mb-4">
@@ -545,6 +587,78 @@
       });
     }
 
+    // ─── Kullanıcı Giriş Sistemi ──────────────────────────────
+    const credentials = {
+      'FATIHGR':    { password: '997522',  userId: 'fatih' },
+      'TUNCAYCC':   { password: '764819',  userId: 'tuncay' },
+      'FURKANBK':   { password: '349111',  userId: 'furkan' },
+      'PINARCC':    { password: '492344',  userId: 'pinar' },
+      'ELIFGK':     { password: '118826',  userId: 'elif' },
+      'AHMETYK':    { password: '437738',  userId: 'ahmet' },
+      'BAYRAMCT':   { password: '516899',  userId: 'bayram' },
+      'DOGANAE':    { password: '449967',  userId: 'dogan' },
+      'YAKUPSH':    { password: '523634',  userId: 'yakup' },
+      'HAKANGL':    { password: '789329',  userId: 'hakan' },
+      'MEHMETYD':   { password: '413418',  userId: 'mehmet' },
+      'SULEYMANCN': { password: '468983',  userId: 'suleyman' },
+    };
+
+    let currentLoggedInUser = null; // { username, userId, user }
+
+    function openLoginModal() {
+      document.getElementById('login-username').value = '';
+      document.getElementById('login-password').value = '';
+      document.getElementById('login-error').classList.add('hidden');
+      const modal = document.getElementById('login-modal');
+      modal.classList.remove('hidden'); modal.classList.add('flex');
+      setTimeout(() => document.getElementById('login-username').focus(), 100);
+    }
+
+    function closeLoginModal() {
+      const modal = document.getElementById('login-modal');
+      modal.classList.add('hidden'); modal.classList.remove('flex');
+    }
+
+    function togglePasswordVisibility() {
+      const input = document.getElementById('login-password');
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    function doLogin(event) {
+      event.preventDefault();
+      const username = document.getElementById('login-username').value.trim().toUpperCase();
+      const password = document.getElementById('login-password').value.trim();
+      const cred = credentials[username];
+      if (!cred || cred.password !== password) {
+        document.getElementById('login-error').classList.remove('hidden');
+        return;
+      }
+      currentLoggedInUser = { username, userId: cred.userId, user: users[cred.userId] };
+      updateNavForLogin();
+      closeLoginModal();
+    }
+
+    function doLogout() {
+      currentLoggedInUser = null;
+      updateNavForLogin();
+    }
+
+    function updateNavForLogin() {
+      const loginBtn   = document.getElementById('login-nav-btn');
+      const userInfo   = document.getElementById('user-nav-info');
+      const navName    = document.getElementById('nav-username');
+      const navAvatar  = document.getElementById('nav-user-avatar');
+      if (currentLoggedInUser) {
+        loginBtn.classList.add('hidden');
+        userInfo.classList.remove('hidden'); userInfo.classList.add('flex');
+        navName.textContent   = currentLoggedInUser.username;
+        navAvatar.textContent = currentLoggedInUser.user?.initials || currentLoggedInUser.username.substring(0,2);
+      } else {
+        loginBtn.classList.remove('hidden');
+        userInfo.classList.remove('flex'); userInfo.classList.add('hidden');
+      }
+    }
+
     // Sidebar state
     let sidebarOpen = true;
 
@@ -634,6 +748,7 @@
       mehmet:   { name: 'Mehmet YILDIZ',  initials: 'MY', gradient: 'from-amber-500 to-yellow-500',   role: 'Kaynak Teknisyeni' },
       suleyman: { name: 'Süleyman ÇINAR', initials: 'SÇ', gradient: 'from-red-500 to-orange-500',    role: 'Kaynak Teknisyeni' },
       fettah:   { name: 'Fettah GÜL',    initials: 'FG', gradient: 'from-cyan-500 to-blue-500',      role: 'İdari Müdür' },
+      bayram:   { name: 'Bayram',         initials: 'B',  gradient: 'from-teal-500 to-emerald-500',  role: 'İdari Personel' },
       elif:     { name: 'Elif GÖKMEN',   initials: 'EG', gradient: 'from-indigo-500 to-purple-500',  role: 'İdari Personel' },
       ahmet:    { name: 'Ahmet YÜKSEL',  initials: 'AY', gradient: 'from-green-500 to-teal-500',    role: 'İdari Personel' },
       furkan:   { name: 'Furkan BIÇAK',  initials: 'FB', gradient: 'from-violet-500 to-purple-500',  role: 'Yönetici' },
