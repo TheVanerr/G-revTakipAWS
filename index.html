@@ -1,0 +1,1353 @@
+<!doctype html>
+<html lang="tr" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>İş Takip Sistemi</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Poppins', sans-serif; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .nav-link.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .sidebar-open { transform: translateX(0); }
+    .sidebar-closed { transform: translateX(-100%); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade { animation: fadeIn 0.3s ease-out; }
+    @keyframes pulse-border { 0%, 100% { border-color: #667eea; } 50% { border-color: #a855f7; } }
+    .task-card { animation: fadeIn 0.4s ease-out; }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white overflow-auto"><!-- Navbar -->
+  <nav class="bg-black/30 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50">
+   <div class="max-w-7xl mx-auto px-4">
+    <div class="flex items-center justify-between h-16">
+     <div class="flex flex-wrap gap-1 sm:gap-2"><button onclick="showPage('giris')" class="nav-link active px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="giris">Giriş</button> <button onclick="showPage('kullanici')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="kullanici">Kullanıcı</button> <button onclick="showPage('montaj')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="montaj">Montaj</button> <button onclick="showPage('kaynak')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="kaynak">Kaynak</button> <button onclick="showPage('idare')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="idare">İdare</button> <button onclick="showPage('yonetim')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="yonetim">Yönetim</button> <button onclick="showPage('makine')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="makine">Makine</button> <button onclick="showPage('servis')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="servis">Servis</button> <button onclick="showPage('yazilim')" class="nav-link px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all hover:bg-white/10" data-page="yazilim">Yazılım</button>
+     </div><div class="flex items-center gap-2"><button id="makine-ekle-nav-btn" onclick="openMakineModal()" style="display:none" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg><span class="hidden sm:inline">Makine Ekle</span></button> <button id="servis-ekle-nav-btn" onclick="openServisModal()" style="display:none" class="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg><span class="hidden sm:inline">Servis Kaydı Ekle</span></button> <button id="yazilim-ekle-nav-btn" onclick="openYazilimModal()" style="display:none" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg><span class="hidden sm:inline">Yazılım Ekle</span></button> <button class="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+      </svg><span class="hidden sm:inline">Giriş Yap</span> </button></div>
+    </div>
+   </div>
+  </nav><!-- Giriş Sayfası -->
+  <div id="page-giris" class="page active">
+   <div class="max-w-4xl mx-auto px-4 py-12">
+    <div class="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-8 sm:p-12 animate-fade">
+     <div class="text-center mb-8">
+      <div class="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 flex items-center justify-center">
+       <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+       </svg>
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-bold mb-4 bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent" id="welcome-title">İş Takip Sistemine Hoş Geldiniz</h1>
+      <p class="text-gray-300 text-lg" id="welcome-text">Ekibinizin görevlerini kolayca yönetin ve takip edin</p>
+     </div>
+     <div class="grid sm:grid-cols-3 gap-4 mt-8">
+      <div class="bg-white/5 rounded-2xl p-6 text-center border border-white/5 hover:border-violet-500/50 transition-all">
+       <div class="w-12 h-12 mx-auto mb-4 rounded-xl bg-violet-500/20 flex items-center justify-center">
+        <svg class="w-6 h-6 text-violet-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+        </svg>
+       </div>
+       <h3 class="font-semibold mb-2">Ekip Yönetimi</h3>
+       <p class="text-sm text-gray-400">Tüm ekip üyelerini tek yerden yönetin</p>
+      </div>
+      <div class="bg-white/5 rounded-2xl p-6 text-center border border-white/5 hover:border-fuchsia-500/50 transition-all">
+       <div class="w-12 h-12 mx-auto mb-4 rounded-xl bg-fuchsia-500/20 flex items-center justify-center">
+        <svg class="w-6 h-6 text-fuchsia-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+        </svg>
+       </div>
+       <h3 class="font-semibold mb-2">Görev Takibi</h3>
+       <p class="text-sm text-gray-400">Görevleri atayın ve ilerlemelerini izleyin</p>
+      </div>
+      <div class="bg-white/5 rounded-2xl p-6 text-center border border-white/5 hover:border-pink-500/50 transition-all">
+       <div class="w-12 h-12 mx-auto mb-4 rounded-xl bg-pink-500/20 flex items-center justify-center">
+        <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+        </svg>
+       </div>
+       <h3 class="font-semibold mb-2">Raporlama</h3>
+       <p class="text-sm text-gray-400">Detaylı raporlar ve analizler</p>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div><!-- Kullanıcı Sayfası -->
+  <div id="page-kullanici" class="page">
+   <div class="flex h-[calc(100%-4rem)]"><!-- Sidebar Toggle Button --> <button onclick="toggleSidebar()" class="fixed left-4 top-20 z-40 bg-violet-600 hover:bg-violet-700 p-2 rounded-lg transition-all" id="sidebar-toggle">
+     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+     </svg></button> <!-- Sidebar -->
+    <div id="sidebar" class="fixed left-0 top-16 h-[calc(100%-4rem)] w-64 bg-black/40 backdrop-blur-xl border-r border-white/10 transition-transform duration-300 z-30 sidebar-open overflow-y-auto">
+     <div class="p-4 pt-14">
+      <div class="space-y-2">
+       <button onclick="selectUser('fatih')" class="user-btn w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-violet-500/50"><div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center font-bold text-sm flex-shrink-0">FG</div><span>Fatih GÜRAL</span></button>
+       <button onclick="selectUser('dogan')" class="user-btn w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-violet-500/50"><div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center font-bold text-sm flex-shrink-0">DA</div><span>Doğan AÇIKEL</span></button>
+       <button onclick="selectUser('yakup')" class="user-btn w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-violet-500/50"><div class="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center font-bold text-sm flex-shrink-0">YŞ</div><span>Yakup ŞAHİN</span></button>
+       <button onclick="selectUser('hakan')" class="user-btn w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-violet-500/50"><div class="w-10 h-10 rounded-full bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center font-bold text-sm flex-shrink-0">HG</div><span>Hakan GÜL</span></button>
+       <button onclick="selectUser('mehmet')" class="user-btn w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-violet-500/50"><div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center font-bold text-sm flex-shrink-0">MY</div><span>Mehmet YILDIZ</span></button>
+       <button onclick="selectUser('suleyman')" class="user-btn w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-violet-500/50"><div class="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center font-bold text-sm flex-shrink-0">SÇ</div><span>Süleyman ÇINAR</span></button>
+       <button onclick="selectUser('fettah')" class="user-btn w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-violet-500/50"><div class="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center font-bold text-sm flex-shrink-0">FG</div><span>Fettah GÜL</span></button>
+       <button onclick="selectUser('elif')" class="user-btn w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-violet-500/50"><div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-sm flex-shrink-0">EG</div><span>Elif GÖKMEN</span></button>
+       <button onclick="selectUser('ahmet')" class="user-btn w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-violet-500/50"><div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center font-bold text-sm flex-shrink-0">AY</div><span>Ahmet YÜKSEL</span></button>
+       <button onclick="selectUser('furkan')" class="user-btn w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-violet-500/50"><div class="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center font-bold text-sm flex-shrink-0">FB</div><span>Furkan BIÇAK</span></button>
+       <button onclick="selectUser('tuncay')" class="user-btn w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-violet-500/50"><div class="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center font-bold text-sm flex-shrink-0">TÇ</div><span>Tuncay ÇİNİCİ</span></button>
+       <button onclick="selectUser('pinar')" class="user-btn w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all border border-transparent hover:border-violet-500/50"><div class="w-10 h-10 rounded-full bg-gradient-to-br from-fuchsia-500 to-purple-500 flex items-center justify-center font-bold text-sm flex-shrink-0">PÇ</div><span>Pınar ÇİNİCİ</span></button>
+      </div>
+     </div>
+    </div><!-- Main Content -->
+    <div id="user-content" class="flex-1 p-8 ml-64 transition-all duration-300">
+     <div class="max-w-4xl mx-auto">
+      <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-8 text-center">
+       <svg class="w-16 h-16 mx-auto mb-4 text-gray-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+       </svg>
+       <p class="text-gray-400">Sol menüden bir kullanıcı seçin</p>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div><!-- Montaj Sayfası -->
+  <div id="page-montaj" class="page">
+   <div class="max-w-7xl mx-auto px-4 py-8">
+    <h2 class="text-2xl font-bold mb-8 text-center bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">Montaj Ekibi</h2>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6" id="montaj-cards"><!-- Fatih GÜRAL -->
+     <div class="flex flex-col">
+      <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:border-violet-500/50 transition-all relative">
+       <div class="flex flex-col items-center">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center font-bold text-2xl mb-4 ring-4 ring-blue-500/20">
+         FG
+        </div>
+        <h3 class="font-semibold text-lg">Fatih GÜRAL</h3>
+        <p class="text-sm text-gray-400 mt-1">Montaj Teknisyeni</p>
+       </div><button onclick="openTaskModal('fatih', 'Fatih GÜRAL')" class="absolute bottom-4 right-4 bg-violet-600 hover:bg-violet-700 p-2 rounded-lg transition-all group">
+        <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg></button>
+      </div>
+      <div id="tasks-fatih" class="mt-3 space-y-2"></div>
+     </div><!-- Doğan AÇIKEL -->
+     <div class="flex flex-col">
+      <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:border-violet-500/50 transition-all relative">
+       <div class="flex flex-col items-center">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center font-bold text-2xl mb-4 ring-4 ring-emerald-500/20">
+         DA
+        </div>
+        <h3 class="font-semibold text-lg">Doğan AÇIKEL</h3>
+        <p class="text-sm text-gray-400 mt-1">Montaj Teknisyeni</p>
+       </div><button onclick="openTaskModal('dogan', 'Doğan AÇIKEL')" class="absolute bottom-4 right-4 bg-violet-600 hover:bg-violet-700 p-2 rounded-lg transition-all group">
+        <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg></button>
+      </div>
+      <div id="tasks-dogan" class="mt-3 space-y-2"></div>
+     </div><!-- Yakup ŞAHİN -->
+     <div class="flex flex-col">
+      <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:border-violet-500/50 transition-all relative">
+       <div class="flex flex-col items-center">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center font-bold text-2xl mb-4 ring-4 ring-orange-500/20">
+         YŞ
+        </div>
+        <h3 class="font-semibold text-lg">Yakup ŞAHİN</h3>
+        <p class="text-sm text-gray-400 mt-1">Montaj Teknisyeni</p>
+       </div><button onclick="openTaskModal('yakup', 'Yakup ŞAHİN')" class="absolute bottom-4 right-4 bg-violet-600 hover:bg-violet-700 p-2 rounded-lg transition-all group">
+        <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg></button>
+      </div>
+      <div id="tasks-yakup" class="mt-3 space-y-2"></div>
+     </div><!-- Hakan GÜL -->
+     <div class="flex flex-col">
+      <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:border-violet-500/50 transition-all relative">
+       <div class="flex flex-col items-center">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center font-bold text-2xl mb-4 ring-4 ring-rose-500/20">
+         HG
+        </div>
+        <h3 class="font-semibold text-lg">Hakan GÜL</h3>
+        <p class="text-sm text-gray-400 mt-1">Montaj Teknisyeni</p>
+       </div><button onclick="openTaskModal('hakan', 'Hakan GÜL')" class="absolute bottom-4 right-4 bg-violet-600 hover:bg-violet-700 p-2 rounded-lg transition-all group">
+        <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg></button>
+      </div>
+      <div id="tasks-hakan" class="mt-3 space-y-2"></div>
+     </div>
+    </div>
+   </div>
+  </div><!-- Diğer Sayfalar -->
+  <div id="page-kaynak" class="page">
+   <div class="max-w-7xl mx-auto px-4 py-8">
+    <h2 class="text-2xl font-bold mb-8 text-center bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">Kaynak Ekibi</h2>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+     <div class="flex flex-col">
+      <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:border-orange-500/50 transition-all relative">
+       <div class="flex flex-col items-center">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-rose-500 to-pink-500 flex items-center justify-center font-bold text-2xl mb-4 ring-4 ring-rose-500/20">
+         HG
+        </div>
+        <h3 class="font-semibold text-lg">Hakan GÜL</h3>
+        <p class="text-sm text-gray-400 mt-1">Kaynak Teknisyeni</p>
+       </div><button onclick="openTaskModal('hakan-kaynak', 'Hakan GÜL')" class="absolute bottom-4 right-4 bg-violet-600 hover:bg-violet-700 p-2 rounded-lg transition-all group">
+        <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg></button>
+      </div>
+      <div id="tasks-hakan-kaynak" class="mt-3 space-y-2"></div>
+     </div>
+     <div class="flex flex-col">
+      <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:border-orange-500/50 transition-all relative">
+       <div class="flex flex-col items-center">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center font-bold text-2xl mb-4 ring-4 ring-amber-500/20">
+         MY
+        </div>
+        <h3 class="font-semibold text-lg">Mehmet YILDIZ</h3>
+        <p class="text-sm text-gray-400 mt-1">Kaynak Teknisyeni</p>
+       </div><button onclick="openTaskModal('mehmet', 'Mehmet YILDIZ')" class="absolute bottom-4 right-4 bg-violet-600 hover:bg-violet-700 p-2 rounded-lg transition-all group">
+        <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg></button>
+      </div>
+      <div id="tasks-mehmet" class="mt-3 space-y-2"></div>
+     </div>
+     <div class="flex flex-col">
+      <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:border-orange-500/50 transition-all relative">
+       <div class="flex flex-col items-center">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center font-bold text-2xl mb-4 ring-4 ring-red-500/20">
+         SÇ
+        </div>
+        <h3 class="font-semibold text-lg">Süleyman ÇINAR</h3>
+        <p class="text-sm text-gray-400 mt-1">Kaynak Teknisyeni</p>
+       </div><button onclick="openTaskModal('suleyman', 'Süleyman ÇINAR')" class="absolute bottom-4 right-4 bg-violet-600 hover:bg-violet-700 p-2 rounded-lg transition-all group">
+        <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg></button>
+      </div>
+      <div id="tasks-suleyman" class="mt-3 space-y-2"></div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <div id="page-idare" class="page">
+   <div class="max-w-7xl mx-auto px-4 py-8">
+    <h2 class="text-2xl font-bold mb-8 text-center bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">İdare Ekibi</h2>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+     <div class="flex flex-col">
+      <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:border-cyan-500/50 transition-all relative">
+       <div class="flex flex-col items-center">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center font-bold text-2xl mb-4 ring-4 ring-cyan-500/20">
+         FG
+        </div>
+        <h3 class="font-semibold text-lg">Fettah GÜL</h3>
+        <p class="text-sm text-gray-400 mt-1">İdari Müdür</p>
+       </div><button onclick="openTaskModal('fettah', 'Fettah GÜL')" class="absolute bottom-4 right-4 bg-violet-600 hover:bg-violet-700 p-2 rounded-lg transition-all group">
+        <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg></button>
+      </div>
+      <div id="tasks-fettah" class="mt-3 space-y-2"></div>
+     </div>
+     <div class="flex flex-col">
+      <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:border-cyan-500/50 transition-all relative">
+       <div class="flex flex-col items-center">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-2xl mb-4 ring-4 ring-indigo-500/20">
+         EG
+        </div>
+        <h3 class="font-semibold text-lg">Elif GÖKMEN</h3>
+        <p class="text-sm text-gray-400 mt-1">İdari Personel</p>
+       </div><button onclick="openTaskModal('elif', 'Elif GÖKMEN')" class="absolute bottom-4 right-4 bg-violet-600 hover:bg-violet-700 p-2 rounded-lg transition-all group">
+        <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg></button>
+      </div>
+      <div id="tasks-elif" class="mt-3 space-y-2"></div>
+     </div>
+     <div class="flex flex-col">
+      <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:border-cyan-500/50 transition-all relative">
+       <div class="flex flex-col items-center">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center font-bold text-2xl mb-4 ring-4 ring-green-500/20">
+         AY
+        </div>
+        <h3 class="font-semibold text-lg">Ahmet YÜKSEL</h3>
+        <p class="text-sm text-gray-400 mt-1">İdari Personel</p>
+       </div><button onclick="openTaskModal('ahmet', 'Ahmet YÜKSEL')" class="absolute bottom-4 right-4 bg-violet-600 hover:bg-violet-700 p-2 rounded-lg transition-all group">
+        <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg></button>
+      </div>
+      <div id="tasks-ahmet" class="mt-3 space-y-2"></div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <div id="page-yonetim" class="page">
+   <div class="max-w-7xl mx-auto px-4 py-8">
+    <h2 class="text-2xl font-bold mb-8 text-center bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Yönetim Ekibi</h2>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+     <div class="flex flex-col">
+      <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:border-purple-500/50 transition-all relative">
+       <div class="flex flex-col items-center">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center font-bold text-2xl mb-4 ring-4 ring-blue-500/20">
+         FG
+        </div>
+        <h3 class="font-semibold text-lg">Fatih GÜRAL</h3>
+        <p class="text-sm text-gray-400 mt-1">Yönetici</p>
+       </div><button onclick="openTaskModal('fatih-yonetim', 'Fatih GÜRAL')" class="absolute bottom-4 right-4 bg-violet-600 hover:bg-violet-700 p-2 rounded-lg transition-all group">
+        <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg></button>
+      </div>
+      <div id="tasks-fatih-yonetim" class="mt-3 space-y-2"></div>
+     </div>
+     <div class="flex flex-col">
+      <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:border-purple-500/50 transition-all relative">
+       <div class="flex flex-col items-center">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center font-bold text-2xl mb-4 ring-4 ring-violet-500/20">
+         FB
+        </div>
+        <h3 class="font-semibold text-lg">Furkan BIÇAK</h3>
+        <p class="text-sm text-gray-400 mt-1">Yönetici</p>
+       </div><button onclick="openTaskModal('furkan', 'Furkan BIÇAK')" class="absolute bottom-4 right-4 bg-violet-600 hover:bg-violet-700 p-2 rounded-lg transition-all group">
+        <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg></button>
+      </div>
+      <div id="tasks-furkan" class="mt-3 space-y-2"></div>
+     </div>
+     <div class="flex flex-col">
+      <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:border-purple-500/50 transition-all relative">
+       <div class="flex flex-col items-center">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center font-bold text-2xl mb-4 ring-4 ring-pink-500/20">
+         TÇ
+        </div>
+        <h3 class="font-semibold text-lg">Tuncay ÇİNİCİ</h3>
+        <p class="text-sm text-gray-400 mt-1">Yönetici</p>
+       </div><button onclick="openTaskModal('tuncay', 'Tuncay ÇİNİCİ')" class="absolute bottom-4 right-4 bg-violet-600 hover:bg-violet-700 p-2 rounded-lg transition-all group">
+        <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg></button>
+      </div>
+      <div id="tasks-tuncay" class="mt-3 space-y-2"></div>
+     </div>
+     <div class="flex flex-col">
+      <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:border-purple-500/50 transition-all relative">
+       <div class="flex flex-col items-center">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-fuchsia-500 to-purple-500 flex items-center justify-center font-bold text-2xl mb-4 ring-4 ring-fuchsia-500/20">
+         PÇ
+        </div>
+        <h3 class="font-semibold text-lg">Pınar ÇİNİCİ</h3>
+        <p class="text-sm text-gray-400 mt-1">Yönetici</p>
+       </div><button onclick="openTaskModal('pinar', 'Pınar ÇİNİCİ')" class="absolute bottom-4 right-4 bg-violet-600 hover:bg-violet-700 p-2 rounded-lg transition-all group">
+        <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg></button>
+      </div>
+      <div id="tasks-pinar" class="mt-3 space-y-2"></div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <div id="page-makine" class="page">
+   <div class="max-w-7xl mx-auto px-4 py-8">
+    <h2 class="text-2xl font-bold mb-8 text-center bg-gradient-to-r from-slate-300 to-gray-400 bg-clip-text text-transparent">Makine Bölümü</h2>
+    <div id="makine-cards" class="space-y-4"></div>
+   </div>
+  </div>
+  <div id="page-servis" class="page">
+   <div class="max-w-7xl mx-auto px-4 py-8">
+    <h2 class="text-2xl font-bold mb-8 text-center bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">Servis Kaydı</h2>
+    <div id="servis-cards" class="space-y-4"></div>
+   </div>
+  </div>
+  <div id="page-yazilim" class="page">
+   <div class="max-w-7xl mx-auto px-4 py-8">
+    <h2 class="text-2xl font-bold mb-8 text-center bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Yazılım Bölümü</h2>
+    <div id="yazilim-cards" class="space-y-4"></div>
+   </div>
+  </div><!-- Servis Kaydı Ekleme Modalı -->
+  <div id="servis-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center">
+   <div class="bg-slate-900 rounded-2xl border border-white/20 p-6 w-full max-w-md mx-4 animate-fade">
+    <div class="flex items-center justify-between mb-6">
+     <h3 class="text-xl font-semibold">Servis Kaydı Ekle</h3>
+     <button onclick="closeServisModal()" class="p-2 hover:bg-white/10 rounded-lg transition-all"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+    </div>
+    <form id="servis-form" onsubmit="submitServis(event)">
+     <div class="space-y-4">
+      <div><label class="block text-sm font-medium mb-2">Makine Seri Numarası</label><input type="text" id="servis-seri" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-green-500 transition-all" placeholder="Seri numarasını girin..."></div>
+      <div><label class="block text-sm font-medium mb-2">Makine Modeli</label><input type="text" id="servis-model" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-green-500 transition-all" placeholder="Makine modelini girin..."></div>
+      <div><label class="block text-sm font-medium mb-2">Şirket</label><input type="text" id="servis-sirket" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-green-500 transition-all" placeholder="Şirketi girin..."></div>
+      <div><label class="block text-sm font-medium mb-2">Yaşanan Arıza</label><textarea id="servis-ariza" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-green-500 transition-all resize-none" rows="2" placeholder="Arızayı tanımlayın..."></textarea></div>
+      <div><label class="block text-sm font-medium mb-2">Nasıl Çözüldü</label><textarea id="servis-cozum" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-green-500 transition-all resize-none" rows="2" placeholder="Çözümü açıklayın..."></textarea></div>
+     </div>
+     <div class="flex gap-3 mt-6"><button type="button" onclick="closeServisModal()" class="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-xl font-medium transition-all">İptal</button><button type="submit" class="flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-xl font-medium transition-all">Tamam</button></div>
+    </form>
+   </div>
+  </div>
+  <!-- Yazılım Ekleme Modalı -->
+  <div id="yazilim-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center">
+   <div class="bg-slate-900 rounded-2xl border border-white/20 p-6 w-full max-w-md mx-4 animate-fade">
+    <div class="flex items-center justify-between mb-6">
+     <h3 class="text-xl font-semibold">Yazılım Ekle</h3>
+     <button onclick="closeYazilimModal()" class="p-2 hover:bg-white/10 rounded-lg transition-all"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+    </div>
+    <form id="yazilim-form" onsubmit="submitYazilim(event)">
+     <div class="space-y-4">
+      <div><label class="block text-sm font-medium mb-2">Makine Seri Numarası</label><input type="text" id="yazilim-seri" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 transition-all" placeholder="Seri numarasını girin..."></div>
+      <div><label class="block text-sm font-medium mb-2">Makine Modeli</label><input type="text" id="yazilim-model" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 transition-all" placeholder="Makine modelini girin..."></div>
+      <div><label class="block text-sm font-medium mb-2">Alıcı Firma</label><input type="text" id="yazilim-firma" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 transition-all" placeholder="Firma adını girin..."></div>
+     </div>
+     <div class="flex gap-3 mt-6"><button type="button" onclick="closeYazilimModal()" class="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-xl font-medium transition-all">İptal</button><button type="submit" class="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-xl font-medium transition-all">Tamam</button></div>
+    </form>
+   </div>
+  </div>
+  <!-- Makine Ekleme Modalı -->
+  <div id="makine-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center">
+   <div class="bg-slate-900 rounded-2xl border border-white/20 p-6 w-full max-w-md mx-4 animate-fade">
+    <div class="flex items-center justify-between mb-6">
+     <h3 class="text-xl font-semibold">Makine Ekle</h3><button onclick="closeMakineModal()" class="p-2 hover:bg-white/10 rounded-lg transition-all">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+    </div>
+    <form id="makine-form" onsubmit="submitMakine(event)">
+     <div class="space-y-4">
+      <div><label class="block text-sm font-medium mb-2">Seri Numarası</label> <input type="text" id="makine-seri" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-violet-500 transition-all" placeholder="Seri numarasını girin..."></div>
+      <div><label class="block text-sm font-medium mb-2">Makine Modeli</label> <input type="text" id="makine-model" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-violet-500 transition-all" placeholder="Makine modelini girin..."></div>
+      <div><label class="block text-sm font-medium mb-2">Alıcı Firma</label> <input type="text" id="makine-firma" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-violet-500 transition-all" placeholder="Alıcı firma adını girin..."></div>
+      <div class="grid grid-cols-2 gap-4">
+       <div><label class="block text-sm font-medium mb-2">Bitiş Tarihi</label> <input type="date" id="makine-tarih" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-violet-500 transition-all"></div>
+       <div><label class="block text-sm font-medium mb-2">Bitiş Saati</label> <input type="time" id="makine-saat" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-violet-500 transition-all"></div>
+      </div>
+     </div>
+     <div class="flex gap-3 mt-6"><button type="button" onclick="closeMakineModal()" class="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-xl font-medium transition-all">İptal</button> <button type="submit" class="flex-1 px-4 py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 rounded-xl font-medium transition-all">Tamam</button></div>
+    </form>
+   </div>
+  </div>
+  <!-- Hata / Revize Ekleme Modalı -->
+  <div id="hata-revize-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center">
+   <div class="bg-slate-900 rounded-2xl border border-white/20 p-6 w-full max-w-md mx-4 animate-fade">
+    <div class="flex items-center justify-between mb-6">
+     <h3 class="text-xl font-semibold" id="hata-revize-title">Hata Ekle</h3><button onclick="closeHataRevizeModal()" class="p-2 hover:bg-white/10 rounded-lg transition-all">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+    </div>
+    <form id="hata-revize-form" onsubmit="submitHataRevize(event)">
+     <input type="hidden" id="hata-revize-type">
+     <input type="hidden" id="hata-revize-card-id">
+     <div>
+       <div class="flex items-center justify-between mb-2">
+         <label class="text-sm font-medium" id="hata-revize-label">Hata Tanımı</label>
+         <button type="button" id="mic-btn" onclick="toggleMic()" title="Sesle Yaz"
+           class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all bg-white/5 hover:bg-white/10 text-gray-300">
+           <svg id="mic-icon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 10v2a7 7 0 01-14 0v-2M12 19v4m-4 0h8"/>
+           </svg>
+           <span id="mic-label">Sesle Yaz</span>
+         </button>
+       </div>
+       <textarea id="hata-revize-description" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-violet-500 transition-all resize-none" rows="3" placeholder="Tanımı yazın..."></textarea>
+     </div>
+     <div class="flex gap-3 mt-6"><button type="button" onclick="closeHataRevizeModal()" class="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-xl font-medium transition-all">İptal</button> <button type="submit" class="flex-1 px-4 py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 rounded-xl font-medium transition-all">Tamam</button></div>
+    </form>
+   </div>
+  </div>
+  <!-- Hata/Revize Öğe Silme Onay Modalı -->
+  <div id="item-delete-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center">
+   <div class="bg-slate-900 rounded-2xl border border-white/20 p-6 w-full max-w-sm mx-4 animate-fade">
+    <div class="flex items-center gap-3 mb-4">
+     <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+      <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"></path></svg>
+     </div>
+     <h3 class="text-lg font-semibold">Emin misiniz?</h3>
+    </div>
+    <p class="text-gray-300 mb-6 text-sm">Bu kayıtı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.</p>
+    <div class="flex gap-3">
+     <button onclick="closeItemDeleteModal()" class="flex-1 px-4 py-2.5 bg-white/5 hover:bg-white/10 rounded-xl font-medium transition-all">İptal</button>
+     <button onclick="confirmItemDelete()" class="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 rounded-xl font-medium transition-all">Sil</button>
+    </div>
+   </div>
+  </div>
+  <!-- Görev Silme Onay Modalı -->
+  <div id="task-delete-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center">
+   <div class="bg-slate-900 rounded-2xl border border-white/20 p-6 w-full max-w-sm mx-4 animate-fade">
+    <div class="flex items-center gap-3 mb-4">
+     <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+      <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"></path></svg>
+     </div>
+     <h3 class="text-lg font-semibold">Görevi Sil</h3>
+    </div>
+    <p class="text-gray-300 mb-6 text-sm">Bu görevi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.</p>
+    <div class="flex gap-3">
+     <button onclick="closeTaskDeleteModal()" class="flex-1 px-4 py-2.5 bg-white/5 hover:bg-white/10 rounded-xl font-medium transition-all">İptal</button>
+     <button onclick="confirmDeleteTask()" class="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 rounded-xl font-medium transition-all">Sil</button>
+    </div>
+   </div>
+  </div>
+  <!-- Makine Silme Şifre Modalı -->
+  <div id="makine-delete-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center">
+   <div class="bg-slate-900 rounded-2xl border border-white/20 p-6 w-full max-w-sm mx-4 animate-fade">
+    <div class="flex items-center justify-between mb-5">
+     <h3 class="text-lg font-semibold">Makineyi Sil</h3>
+     <button onclick="closeMakineDeleteModal()" class="p-2 hover:bg-white/10 rounded-lg transition-all">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+     </button>
+    </div>
+    <p class="text-sm text-gray-400 mb-2">Şifre: <span class="text-white font-mono font-bold">112263</span></p>
+    <input type="password" id="makine-delete-password" placeholder="Şifreyi girin..." class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-red-500 transition-all mb-2">
+    <p id="makine-delete-error" class="text-red-400 text-xs mb-3 hidden">Hatalı şifre. Lütfen tekrar deneyin.</p>
+    <div class="flex gap-3 mt-2">
+     <button onclick="closeMakineDeleteModal()" class="flex-1 px-4 py-2.5 bg-white/5 hover:bg-white/10 rounded-xl font-medium transition-all">İptal</button>
+     <button onclick="verifyMakineDelete()" class="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 rounded-xl font-medium transition-all">Tamam</button>
+    </div>
+   </div>
+  </div>
+  <!-- Görev Ekleme Modalı -->
+  <div id="task-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center">
+   <div class="bg-slate-900 rounded-2xl border border-white/20 p-6 w-full max-w-md mx-4 animate-fade">
+    <div class="flex items-center justify-between mb-6">
+     <h3 class="text-xl font-semibold" id="task-modal-title">Görev Ekle</h3><button onclick="closeTaskModal()" class="p-2 hover:bg-white/10 rounded-lg transition-all">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg></button>
+    </div>
+    <p class="text-sm text-gray-400 mb-4">Görev eklenecek kişi: <span id="modal-user-name" class="text-violet-400 font-medium"></span></p>
+    <form id="task-form" onsubmit="submitTask(event)"><input type="hidden" id="task-user-id">
+     <div class="space-y-4">
+      <div><label class="block text-sm font-medium mb-2">Görev Tanımı</label> <textarea id="task-description" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-violet-500 transition-all resize-none" rows="3" placeholder="Görev açıklamasını yazın..."></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+       <div><label class="block text-sm font-medium mb-2">Bitiş Tarihi</label> <input type="date" id="task-date" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-violet-500 transition-all">
+       </div>
+       <div><label class="block text-sm font-medium mb-2">Bitiş Saati</label> <input type="time" id="task-time" required class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-violet-500 transition-all">
+       </div>
+      </div>
+     </div>
+     <div class="flex gap-3 mt-6"><button type="button" onclick="closeTaskModal()" class="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-xl font-medium transition-all">İptal</button> <button type="submit" class="flex-1 px-4 py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 rounded-xl font-medium transition-all">Tamam</button>
+     </div>
+    </form>
+   </div>
+  </div>
+  <script>
+    // Default config
+    const defaultConfig = {
+      site_title: 'İş Takip Sistemi',
+      welcome_text: 'Ekibinizin görevlerini kolayca yönetin ve takip edin'
+    };
+
+    // Initialize Element SDK
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (config) => {
+          document.getElementById('site-title').textContent = config.site_title || defaultConfig.site_title;
+          document.getElementById('welcome-text').textContent = config.welcome_text || defaultConfig.welcome_text;
+        },
+        mapToCapabilities: (config) => ({
+          recolorables: [],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ['site_title', config.site_title || defaultConfig.site_title],
+          ['welcome_text', config.welcome_text || defaultConfig.welcome_text]
+        ])
+      });
+    }
+
+    // Sidebar state
+    let sidebarOpen = true;
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const content = document.getElementById('user-content');
+      sidebarOpen = !sidebarOpen;
+      
+      if (sidebarOpen) {
+        sidebar.classList.remove('sidebar-closed');
+        sidebar.classList.add('sidebar-open');
+        content.classList.add('ml-64');
+        content.classList.remove('ml-0');
+      } else {
+        sidebar.classList.remove('sidebar-open');
+        sidebar.classList.add('sidebar-closed');
+        content.classList.remove('ml-64');
+        content.classList.add('ml-0');
+      }
+    }
+
+    // Page navigation
+    function showPage(pageName) {
+      // Hide all pages
+      document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+      });
+      
+      // Show selected page
+      const targetPage = document.getElementById('page-' + pageName);
+      if (targetPage) {
+        targetPage.classList.add('active');
+      }
+      
+      // Update nav links
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+        if (link.dataset.page === pageName) {
+          link.classList.add('active');
+        }
+      });
+
+      // Makine / Servis / Yazılım nav buton görünürlüğü
+      const makineBtn  = document.getElementById('makine-ekle-nav-btn');
+      const servisBtn  = document.getElementById('servis-ekle-nav-btn');
+      const yazilimBtn = document.getElementById('yazilim-ekle-nav-btn');
+      if (makineBtn)  makineBtn.style.display  = pageName === 'makine'  ? 'flex' : 'none';
+      if (servisBtn)  servisBtn.style.display  = pageName === 'servis'  ? 'flex' : 'none';
+      if (yazilimBtn) yazilimBtn.style.display = pageName === 'yazilim' ? 'flex' : 'none';
+    }
+
+    // ─── Canonical user ID mapping ──────────────────────────
+    const userIdMap = {
+      'fatih': 'fatih',  'fatih-yonetim': 'fatih',
+      'hakan': 'hakan',  'hakan-kaynak':  'hakan',
+      'dogan': 'dogan',  'yakup': 'yakup',
+      'mehmet': 'mehmet', 'suleyman': 'suleyman',
+      'fettah': 'fettah', 'elif': 'elif', 'ahmet': 'ahmet',
+      'furkan': 'furkan', 'tuncay': 'tuncay', 'pinar': 'pinar'
+    };
+
+    function getCanonicalId(pageUserId) {
+      return userIdMap[pageUserId] || pageUserId;
+    }
+
+    function getTodayStr() {
+      const d = new Date();
+      return d.getFullYear() + '-' +
+        String(d.getMonth()+1).padStart(2,'0') + '-' +
+        String(d.getDate()).padStart(2,'0');
+    }
+
+    // Central task store: canonicalId → array of task objects
+    const taskStore = {};
+
+    // ─── User data ────────────────────────────────────────────
+    const users = {
+      fatih:    { name: 'Fatih GÜRAL',    initials: 'FG', gradient: 'from-blue-500 to-cyan-500',     role: 'Montaj Teknisyeni' },
+      dogan:    { name: 'Doğan AÇİKEL',  initials: 'DA', gradient: 'from-emerald-500 to-teal-500',  role: 'Montaj Teknisyeni' },
+      yakup:    { name: 'Yakup ŞAHİN',   initials: 'YŞ', gradient: 'from-orange-500 to-amber-500',  role: 'Montaj Teknisyeni' },
+      hakan:    { name: 'Hakan GÜL',     initials: 'HG', gradient: 'from-rose-500 to-pink-500',     role: 'Montaj Teknisyeni' },
+      mehmet:   { name: 'Mehmet YILDIZ',  initials: 'MY', gradient: 'from-amber-500 to-yellow-500',   role: 'Kaynak Teknisyeni' },
+      suleyman: { name: 'Süleyman ÇINAR', initials: 'SÇ', gradient: 'from-red-500 to-orange-500',    role: 'Kaynak Teknisyeni' },
+      fettah:   { name: 'Fettah GÜL',    initials: 'FG', gradient: 'from-cyan-500 to-blue-500',      role: 'İdari Müdür' },
+      elif:     { name: 'Elif GÖKMEN',   initials: 'EG', gradient: 'from-indigo-500 to-purple-500',  role: 'İdari Personel' },
+      ahmet:    { name: 'Ahmet YÜKSEL',  initials: 'AY', gradient: 'from-green-500 to-teal-500',    role: 'İdari Personel' },
+      furkan:   { name: 'Furkan BIÇAK',  initials: 'FB', gradient: 'from-violet-500 to-purple-500',  role: 'Yönetici' },
+      tuncay:   { name: 'Tuncay ÇİNİCİ', initials: 'TÇ', gradient: 'from-pink-500 to-rose-500',    role: 'Yönetici' },
+      pinar:    { name: 'Pınar ÇİNİCİ',  initials: 'PÇ', gradient: 'from-fuchsia-500 to-purple-500', role: 'Yönetici' }
+    };
+
+    let currentViewedUserId = null;
+
+    function selectUser(userId) {
+      const user = users[userId];
+      if (!user) return;
+      currentViewedUserId = userId;
+      // Ensure store exists
+      if (!taskStore[userId]) taskStore[userId] = [];
+      refreshUserProfile();
+    }
+
+    function refreshUserProfile() {
+      const userId = currentViewedUserId;
+      if (!userId) return;
+      const user  = users[userId];
+      const tasks = taskStore[userId] || [];
+      const today = new Date(); today.setHours(0,0,0,0);
+      const total     = tasks.length;
+      const completed = tasks.filter(t => { const d = new Date(t.date); d.setHours(0,0,0,0); return d < today; }).length;
+      const ongoing   = total - completed;
+
+      const taskListHtml = tasks.length > 0
+        ? `<div class="mt-6"><h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">Görevler</h3><div class="space-y-2">${
+            tasks.map(t => `
+              <div id="profile-task-${t.id}" class="task-card bg-white/5 rounded-xl border border-white/10 p-4 hover:border-violet-500/30 transition-all">
+                <div class="flex items-start justify-between gap-2 mb-2">
+                  <p class="task-desc text-sm">${t.desc}</p>
+                  <div class="flex gap-1 flex-shrink-0">
+                    <button onclick="editTask(${t.id})" class="p-1 hover:bg-white/10 rounded-lg transition-all text-blue-400 hover:text-blue-300" title="Düzenle"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
+                    <button onclick="openTaskDeleteModal(${t.id})" class="p-1 hover:bg-white/10 rounded-lg transition-all text-red-400 hover:text-red-300" title="Sil"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 text-xs text-gray-400">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                  <span class="task-datetime">${formatDate(t.date)} - ${t.time}</span>
+                </div>
+                <div class="flex items-center gap-1.5 text-xs text-yellow-400 mt-1">
+                  <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <span data-deadline="${t.date}T${t.time}:00">—</span>
+                </div>
+              </div>`
+          ).join('')}</div></div>`
+        : '';
+
+      document.getElementById('user-content').innerHTML = `
+        <div class="max-w-4xl mx-auto animate-fade">
+          <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-8">
+            <div class="flex items-center gap-6 mb-6">
+              <div class="w-24 h-24 rounded-full bg-gradient-to-br ${user.gradient} flex items-center justify-center font-bold text-3xl ring-4 ring-white/10">${user.initials}</div>
+              <div><h2 class="text-2xl font-bold">${user.name}</h2><p class="text-gray-400">${user.role}</p></div>
+            </div>
+            <div class="grid sm:grid-cols-3 gap-4 mt-6">
+              <div class="bg-white/5 rounded-xl p-4 text-center">
+                <p class="text-3xl font-bold text-violet-400">${total}</p>
+                <p class="text-sm text-gray-400">Toplam Görev</p>
+              </div>
+              <div class="bg-white/5 rounded-xl p-4 text-center">
+                <p class="text-3xl font-bold text-emerald-400">${completed}</p>
+                <p class="text-sm text-gray-400">Tamamlanan</p>
+              </div>
+              <div class="bg-white/5 rounded-xl p-4 text-center">
+                <p class="text-3xl font-bold text-amber-400">${ongoing}</p>
+                <p class="text-sm text-gray-400">Devam Eden</p>
+              </div>
+            </div>
+            ${taskListHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    // Task Modal
+    let taskCounter = 0;
+    let currentEditTaskId   = null; // numeric task id
+    let currentDeleteTaskId = null; // numeric task id
+
+    function getCanonicalOwnerOfTask(taskId) {
+      for (const [uid, tasks] of Object.entries(taskStore)) {
+        if (tasks.some(t => t.id === taskId)) return uid;
+      }
+      return null;
+    }
+
+    function openTaskModal(pageUserId, userName) {
+      currentEditTaskId = null;
+      document.getElementById('task-modal-title').textContent = 'Görev Ekle';
+      document.getElementById('task-user-id').value = pageUserId;
+      document.getElementById('modal-user-name').textContent = userName;
+      document.getElementById('task-form').reset();
+      document.getElementById('task-date').min = getTodayStr();
+      const modal = document.getElementById('task-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeTaskModal() {
+      const modal = document.getElementById('task-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.getElementById('task-form').reset();
+      currentEditTaskId = null;
+    }
+
+    function editTask(taskId) {
+      const canonicalId = getCanonicalOwnerOfTask(taskId);
+      const task = taskStore[canonicalId]?.find(t => t.id === taskId);
+      if (!task) return;
+      currentEditTaskId = taskId;
+      document.getElementById('task-modal-title').textContent = 'Görevi Düzenle';
+      document.getElementById('task-user-id').value = task.pageUserId;
+      document.getElementById('modal-user-name').textContent = users[canonicalId]?.name || '';
+      document.getElementById('task-description').value = task.desc;
+      document.getElementById('task-date').value = task.date;
+      document.getElementById('task-time').value = task.time;
+      document.getElementById('task-date').min = getTodayStr();
+      const modal = document.getElementById('task-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function openTaskDeleteModal(taskId) {
+      currentDeleteTaskId = taskId;
+      const modal = document.getElementById('task-delete-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeTaskDeleteModal() {
+      const modal = document.getElementById('task-delete-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      currentDeleteTaskId = null;
+    }
+
+    function confirmDeleteTask() {
+      if (currentDeleteTaskId !== null) {
+        const taskId = currentDeleteTaskId;
+        const pageCard    = document.getElementById('task-card-'    + taskId);
+        const profileCard = document.getElementById('profile-task-' + taskId);
+        if (pageCard)    pageCard.remove();
+        if (profileCard) profileCard.remove();
+        const canonicalId = getCanonicalOwnerOfTask(taskId);
+        if (canonicalId && taskStore[canonicalId]) {
+          taskStore[canonicalId] = taskStore[canonicalId].filter(t => t.id !== taskId);
+        }
+        if (currentViewedUserId) refreshUserProfile();
+      }
+      closeTaskDeleteModal();
+    }
+
+    function submitTask(event) {
+      event.preventDefault();
+      const pageUserId  = document.getElementById('task-user-id').value;
+      const description = document.getElementById('task-description').value;
+      const date        = document.getElementById('task-date').value;
+      const time        = document.getElementById('task-time').value;
+      const canonicalId = getCanonicalId(pageUserId);
+      if (!taskStore[canonicalId]) taskStore[canonicalId] = [];
+
+      if (currentEditTaskId !== null) {
+        // ── Edit mode ──
+        const taskId = currentEditTaskId;
+        const entry  = taskStore[canonicalId]?.find(t => t.id === taskId);
+        if (entry) { entry.desc = description; entry.date = date; entry.time = time; }
+        const pc  = document.getElementById('task-card-'    + taskId);
+        const prc = document.getElementById('profile-task-' + taskId);
+        if (pc)  { pc.querySelector('.task-desc').textContent = description; pc.querySelector('.task-datetime').textContent = formatDate(date) + ' - ' + time; const cdPc = pc.querySelector('[data-deadline]'); if (cdPc) cdPc.dataset.deadline = date + 'T' + time + ':00'; }
+        if (prc) { prc.querySelector('.task-desc').textContent = description; prc.querySelector('.task-datetime').textContent = formatDate(date) + ' - ' + time; const cdPrc = prc.querySelector('[data-deadline]'); if (cdPrc) cdPrc.dataset.deadline = date + 'T' + time + ':00'; }
+        if (currentViewedUserId) refreshUserProfile();
+        closeTaskModal();
+        return;
+      }
+
+      // ── New task ──
+      taskCounter++;
+      const taskId  = taskCounter;
+      const taskObj = { id: taskId, desc: description, date, time, pageUserId };
+      taskStore[canonicalId].push(taskObj);
+
+      // Render card on the team page
+      const pageContainer = document.getElementById('tasks-' + pageUserId);
+      if (pageContainer) {
+        const taskCard = document.createElement('div');
+        taskCard.id        = 'task-card-' + taskId;
+        taskCard.className = 'task-card bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 hover:border-violet-500/30 transition-all';
+        taskCard.innerHTML = `
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <p class="task-desc text-sm">${description}</p>
+            <div class="flex gap-1 flex-shrink-0">
+              <button onclick="editTask(${taskId})" class="p-1 hover:bg-white/10 rounded-lg transition-all text-blue-400 hover:text-blue-300" title="Düzenle"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
+              <button onclick="openTaskDeleteModal(${taskId})" class="p-1 hover:bg-white/10 rounded-lg transition-all text-red-400 hover:text-red-300" title="Sil"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 text-xs text-gray-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <span class="task-datetime">${formatDate(date)} - ${time}</span>
+          </div>
+          <div class="flex items-center gap-1.5 text-xs text-yellow-400 mt-1">
+            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span data-deadline="${date}T${time}:00">—</span>
+          </div>`;
+        pageContainer.appendChild(taskCard);
+      }
+
+      // Refresh Kullanıcı profile if this user is currently being viewed
+      if (currentViewedUserId === canonicalId) refreshUserProfile();
+
+      closeTaskModal();
+    }
+
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    function formatCountdown(ms) {
+      if (ms <= 0) return '<span class="text-red-400 font-semibold">Süre doldu</span>';
+      const totalSec = Math.floor(ms / 1000);
+      const days  = Math.floor(totalSec / 86400);
+      const hours = Math.floor((totalSec % 86400) / 3600);
+      const mins  = Math.floor((totalSec % 3600) / 60);
+      const secs  = totalSec % 60;
+      if (days > 0)  return `${days} gün ${hours} saat ${mins} dakika`;
+      if (hours > 0) return `${hours} saat ${mins} dakika ${secs} saniye`;
+      if (mins > 0)  return `${mins} dakika ${secs} saniye`;
+      return `${secs} saniye`;
+    }
+
+    function tickCountdowns() {
+      const now = Date.now();
+      document.querySelectorAll('[data-deadline]').forEach(el => {
+        const deadline = new Date(el.dataset.deadline).getTime();
+        el.innerHTML = formatCountdown(deadline - now);
+      });
+    }
+    setInterval(tickCountdowns, 1000);
+    setTimeout(tickCountdowns, 100);
+
+    // ─── Servis ───────────────────────────────────────────────
+    let servisCounter = 0;
+    let currentEditServisId = null;
+
+    function openServisModal() {
+      currentEditServisId = null;
+      document.getElementById('servis-form').reset();
+      const modal = document.getElementById('servis-modal');
+      modal.classList.remove('hidden'); modal.classList.add('flex');
+    }
+    function closeServisModal() {
+      const modal = document.getElementById('servis-modal');
+      modal.classList.add('hidden'); modal.classList.remove('flex');
+      document.getElementById('servis-form').reset();
+      currentEditServisId = null;
+    }
+    function editServis(cardId) {
+      const card = document.getElementById(cardId);
+      if (!card) return;
+      currentEditServisId = cardId;
+      document.getElementById('servis-seri').value   = card.dataset.seri;
+      document.getElementById('servis-model').value  = card.dataset.model;
+      document.getElementById('servis-sirket').value = card.dataset.sirket;
+      document.getElementById('servis-ariza').value  = card.dataset.ariza;
+      document.getElementById('servis-cozum').value  = card.dataset.cozum;
+      const modal = document.getElementById('servis-modal');
+      modal.classList.remove('hidden'); modal.classList.add('flex');
+    }
+    function submitServis(event) {
+      event.preventDefault();
+      const seri   = document.getElementById('servis-seri').value.trim();
+      const model  = document.getElementById('servis-model').value.trim();
+      const sirket = document.getElementById('servis-sirket').value.trim();
+      const ariza  = document.getElementById('servis-ariza').value.trim();
+      const cozum  = document.getElementById('servis-cozum').value.trim();
+
+      if (currentEditServisId) {
+        const card = document.getElementById(currentEditServisId);
+        card.dataset.seri   = seri;  card.dataset.model  = model;
+        card.dataset.sirket = sirket; card.dataset.ariza = ariza; card.dataset.cozum = cozum;
+        card.querySelector('.sv-seri').textContent   = seri;
+        card.querySelector('.sv-model').textContent  = model;
+        card.querySelector('.sv-sirket').textContent = sirket;
+        card.querySelector('.sv-ariza').textContent  = ariza;
+        card.querySelector('.sv-cozum').textContent  = cozum;
+        closeServisModal(); return;
+      }
+
+      servisCounter++;
+      const cardId = 'servis-card-' + servisCounter;
+      const container = document.getElementById('servis-cards');
+      const card = document.createElement('div');
+      card.id = cardId;
+      card.className = 'task-card bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 hover:border-green-500/30 transition-all w-full';
+      card.dataset.seri = seri; card.dataset.model = model; card.dataset.sirket = sirket;
+      card.dataset.ariza = ariza; card.dataset.cozum = cozum;
+      card.innerHTML = `
+        <div class="p-6">
+          <div class="flex items-start justify-between gap-4 mb-4">
+            <div class="flex flex-wrap gap-6">
+              <div><p class="text-xs text-gray-400 mb-1">Seri Numarası</p><p class="sv-seri font-semibold text-green-300">${seri}</p></div>
+              <div><p class="text-xs text-gray-400 mb-1">Makine Modeli</p><p class="sv-model font-semibold">${model}</p></div>
+              <div><p class="text-xs text-gray-400 mb-1">Şirket</p><p class="sv-sirket font-semibold text-emerald-300">${sirket}</p></div>
+            </div>
+            <div class="flex gap-1 flex-shrink-0">
+              <button onclick="editServis('${cardId}')" class="p-1.5 hover:bg-white/10 rounded-lg transition-all text-blue-400 hover:text-blue-300" title="Düzenle">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+              </button>
+              <button onclick="openMakineDeleteModal('${cardId}')" class="p-1.5 hover:bg-white/10 rounded-lg transition-all text-red-400 hover:text-red-300" title="Sil">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              </button>
+            </div>
+          </div>
+          <div class="grid sm:grid-cols-2 gap-4 border-t border-white/10 pt-4">
+            <div class="bg-red-900/20 border border-red-500/20 rounded-xl p-4">
+              <p class="text-xs text-red-400 font-semibold mb-2 uppercase tracking-wide">⚠ Yaşanan Arıza</p>
+              <p class="sv-ariza text-sm">${ariza}</p>
+            </div>
+            <div class="bg-green-900/20 border border-green-500/20 rounded-xl p-4">
+              <p class="text-xs text-green-400 font-semibold mb-2 uppercase tracking-wide">✓ Nasıl Çözüldü</p>
+              <p class="sv-cozum text-sm">${cozum}</p>
+            </div>
+          </div>
+        </div>`;
+      container.appendChild(card);
+      closeServisModal();
+    }
+
+    // ─── Yazılım ───────────────────────────────────────────────
+    let yazilimCounter = 0;
+    let currentEditYazilimId = null;
+
+    function openYazilimModal() {
+      currentEditYazilimId = null;
+      document.getElementById('yazilim-form').reset();
+      const modal = document.getElementById('yazilim-modal');
+      modal.classList.remove('hidden'); modal.classList.add('flex');
+    }
+    function closeYazilimModal() {
+      const modal = document.getElementById('yazilim-modal');
+      modal.classList.add('hidden'); modal.classList.remove('flex');
+      document.getElementById('yazilim-form').reset();
+      currentEditYazilimId = null;
+    }
+    function editYazilim(cardId) {
+      const card = document.getElementById(cardId);
+      if (!card) return;
+      currentEditYazilimId = cardId;
+      document.getElementById('yazilim-seri').value  = card.dataset.seri;
+      document.getElementById('yazilim-model').value = card.dataset.model;
+      document.getElementById('yazilim-firma').value = card.dataset.firma;
+      const modal = document.getElementById('yazilim-modal');
+      modal.classList.remove('hidden'); modal.classList.add('flex');
+    }
+    function submitYazilim(event) {
+      event.preventDefault();
+      const seri  = document.getElementById('yazilim-seri').value.trim();
+      const model = document.getElementById('yazilim-model').value.trim();
+      const firma = document.getElementById('yazilim-firma').value.trim();
+
+      if (currentEditYazilimId) {
+        const card = document.getElementById(currentEditYazilimId);
+        card.dataset.seri = seri; card.dataset.model = model; card.dataset.firma = firma;
+        card.querySelector('.yz-seri').textContent  = seri;
+        card.querySelector('.yz-model').textContent = model;
+        card.querySelector('.yz-firma').textContent = firma;
+        closeYazilimModal(); return;
+      }
+
+      yazilimCounter++;
+      const cardId = 'yazilim-card-' + yazilimCounter;
+      const container = document.getElementById('yazilim-cards');
+      const card = document.createElement('div');
+      card.id = cardId;
+      card.className = 'task-card bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 hover:border-indigo-500/30 transition-all w-full';
+      card.dataset.seri  = seri;
+      card.dataset.model = model;
+      card.dataset.firma = firma;
+      card.innerHTML = `
+        <div class="p-6">
+          <div class="flex items-start justify-between gap-4 mb-4">
+            <div class="flex flex-wrap gap-6">
+              <div><p class="text-xs text-gray-400 mb-1">Seri Numarası</p><p class="yz-seri font-semibold text-indigo-300">${seri}</p></div>
+              <div><p class="text-xs text-gray-400 mb-1">Makine Modeli</p><p class="yz-model font-semibold">${model}</p></div>
+              <div><p class="text-xs text-gray-400 mb-1">Alıcı Firma</p><p class="yz-firma font-semibold text-purple-300">${firma}</p></div>
+            </div>
+            <div class="flex gap-1 flex-shrink-0">
+              <button onclick="editYazilim('${cardId}')" class="p-1.5 hover:bg-white/10 rounded-lg transition-all text-blue-400 hover:text-blue-300" title="Düzenle">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+              </button>
+              <button onclick="openMakineDeleteModal('${cardId}')" class="p-1.5 hover:bg-white/10 rounded-lg transition-all text-red-400 hover:text-red-300" title="Sil">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              </button>
+            </div>
+          </div>
+          <div class="border-t border-white/10 pt-4 flex gap-6">
+            <div class="flex-1">
+              <button onclick="openHataRevizeModal('hata', '${cardId}')" class="flex items-center gap-1 bg-red-600/80 hover:bg-red-600 px-3 py-1.5 rounded-lg text-xs font-medium transition-all">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Hata Ekle
+              </button>
+              <div id="hatalar-${cardId}" class="mt-2 space-y-1"></div>
+            </div>
+            <div class="flex-1 text-right">
+              <button onclick="openHataRevizeModal('revize', '${cardId}')" class="flex items-center gap-1 bg-amber-600/80 hover:bg-amber-600 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ml-auto">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Revize Ekle
+              </button>
+              <div id="revizeler-${cardId}" class="mt-2 space-y-1"></div>
+            </div>
+          </div>
+        </div>`;
+      container.appendChild(card);
+      closeYazilimModal();
+    }
+
+    // ─── Makine ───────────────────────────────────────────────
+    let makineCounter = 0;
+    let currentEditMakineId = null;
+    let currentDeleteMakineId = null;
+
+    function openMakineModal() {
+      currentEditMakineId = null;
+      document.getElementById('makine-form').reset();
+      document.getElementById('makine-tarih').min = getTodayStr();
+      const modal = document.getElementById('makine-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeMakineModal() {
+      const modal = document.getElementById('makine-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.getElementById('makine-form').reset();
+      currentEditMakineId = null;
+    }
+
+    function editMakine(cardId) {
+      const card = document.getElementById(cardId);
+      currentEditMakineId = cardId;
+      document.getElementById('makine-seri').value  = card.dataset.seri;
+      document.getElementById('makine-model').value = card.dataset.model;
+      document.getElementById('makine-firma').value = card.dataset.firma;
+      document.getElementById('makine-tarih').value = card.dataset.tarih;
+      document.getElementById('makine-saat').value  = card.dataset.saat;
+      document.getElementById('makine-tarih').min = getTodayStr();
+      const modal = document.getElementById('makine-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function openMakineDeleteModal(cardId) {
+      currentDeleteMakineId = cardId;
+      document.getElementById('makine-delete-password').value = '';
+      document.getElementById('makine-delete-error').classList.add('hidden');
+      const modal = document.getElementById('makine-delete-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeMakineDeleteModal() {
+      const modal = document.getElementById('makine-delete-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      currentDeleteMakineId = null;
+    }
+
+    function verifyMakineDelete() {
+      const pwd = document.getElementById('makine-delete-password').value;
+      if (pwd === '112263') {
+        if (currentDeleteMakineId) {
+          const card = document.getElementById(currentDeleteMakineId);
+          if (card) card.remove();
+        }
+        closeMakineDeleteModal();
+      } else {
+        document.getElementById('makine-delete-error').classList.remove('hidden');
+      }
+    }
+
+    function submitMakine(event) {
+      event.preventDefault();
+      const seri  = document.getElementById('makine-seri').value.trim();
+      const model = document.getElementById('makine-model').value.trim();
+      const firma = document.getElementById('makine-firma').value.trim();
+      const tarih = document.getElementById('makine-tarih').value;
+      const saat  = document.getElementById('makine-saat').value;
+
+      if (currentEditMakineId) {
+        // Düzenleme modu
+        const card = document.getElementById(currentEditMakineId);
+        card.dataset.seri  = seri;
+        card.dataset.model = model;
+        card.dataset.firma = firma;
+        card.dataset.tarih = tarih;
+        card.dataset.saat  = saat;
+        card.querySelector('.mk-seri').textContent  = seri;
+        card.querySelector('.mk-model').textContent = model;
+        card.querySelector('.mk-firma').textContent = firma;
+        card.querySelector('.mk-tarih').textContent = formatDate(tarih) + ' — ' + saat;
+        const cdMk = card.querySelector('[data-deadline]'); if (cdMk) cdMk.dataset.deadline = tarih + 'T' + saat + ':00';
+        closeMakineModal();
+        return;
+      }
+
+      makineCounter++;
+      const cardId = 'makine-card-' + makineCounter;
+      const container = document.getElementById('makine-cards');
+      const card = document.createElement('div');
+      card.id = cardId;
+      card.className = 'task-card bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 hover:border-violet-500/30 transition-all w-full';
+      card.dataset.seri  = seri;
+      card.dataset.model = model;
+      card.dataset.firma = firma;
+      card.dataset.tarih = tarih;
+      card.dataset.saat  = saat;
+      card.innerHTML = `
+        <div class="p-6">
+          <div class="flex items-start justify-between gap-4 mb-4">
+            <div class="flex flex-wrap gap-6">
+              <div><p class="text-xs text-gray-400 mb-1">Seri Numarası</p><p class="mk-seri font-semibold text-violet-300">${seri}</p></div>
+              <div><p class="text-xs text-gray-400 mb-1">Makine Modeli</p><p class="mk-model font-semibold">${model}</p></div>
+              <div><p class="text-xs text-gray-400 mb-1">Alıcı Firma</p><p class="mk-firma font-semibold text-fuchsia-300">${firma}</p></div>
+              <div><p class="text-xs text-gray-400 mb-1">Bitiş Tarihi / Saati</p><p class="mk-tarih font-semibold">${formatDate(tarih)} — ${saat}</p></div>
+              <div><p class="text-xs text-gray-400 mb-1">Kalan Süre</p><p class="text-yellow-400 text-sm font-medium flex items-center gap-1"><svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span data-deadline="${tarih}T${saat}:00">—</span></p></div>
+            </div>
+            <div class="flex gap-1 flex-shrink-0">
+              <button onclick="editMakine('${cardId}')" class="p-1.5 hover:bg-white/10 rounded-lg transition-all text-blue-400 hover:text-blue-300" title="Düzenle">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+              </button>
+              <button onclick="openMakineDeleteModal('${cardId}')" class="p-1.5 hover:bg-white/10 rounded-lg transition-all text-red-400 hover:text-red-300" title="Sil">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              </button>
+            </div>
+          </div>
+          <div class="border-t border-white/10 pt-4 flex gap-6">
+            <div class="flex-1">
+              <button onclick="openHataRevizeModal('hata', '${cardId}')" class="flex items-center gap-1 bg-red-600/80 hover:bg-red-600 px-3 py-1.5 rounded-lg text-xs font-medium transition-all">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Hata Ekle
+              </button>
+              <div id="hatalar-${cardId}" class="mt-2 space-y-1"></div>
+            </div>
+            <div class="flex-1 text-right">
+              <button onclick="openHataRevizeModal('revize', '${cardId}')" class="flex items-center gap-1 bg-amber-600/80 hover:bg-amber-600 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ml-auto">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Revize Ekle
+              </button>
+              <div id="revizeler-${cardId}" class="mt-2 space-y-1"></div>
+            </div>
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+      closeMakineModal();
+    }
+
+    // ─── Hata / Revize ────────────────────────────────────────
+    function editHataRevizeItem(itemId) {
+      const item = document.getElementById(itemId);
+      if (!item) return;
+      currentEditHataRevizeItemId = itemId;
+      const type = item.dataset.type;
+      document.getElementById('hata-revize-type').value    = type;
+      document.getElementById('hata-revize-card-id').value = '';
+      document.getElementById('hata-revize-title').textContent = type === 'hata' ? 'Hata Düzenle' : 'Revize Düzenle';
+      document.getElementById('hata-revize-label').textContent = type === 'hata' ? 'Hata Tanımı' : 'Revize Tanımı';
+      document.getElementById('hata-revize-description').value = item.dataset.desc;
+      const modal = document.getElementById('hata-revize-modal');
+      modal.classList.remove('hidden'); modal.classList.add('flex');
+    }
+
+    let pendingDeleteItemId = null;
+    function openItemDeleteModal(itemId) {
+      pendingDeleteItemId = itemId;
+      const modal = document.getElementById('item-delete-modal');
+      modal.classList.remove('hidden'); modal.classList.add('flex');
+    }
+    function closeItemDeleteModal() {
+      pendingDeleteItemId = null;
+      const modal = document.getElementById('item-delete-modal');
+      modal.classList.add('hidden'); modal.classList.remove('flex');
+    }
+    function confirmItemDelete() {
+      if (pendingDeleteItemId) {
+        const el = document.getElementById(pendingDeleteItemId);
+        if (el) el.remove();
+      }
+      closeItemDeleteModal();
+    }
+
+    function openHataRevizeModal(type, cardId) {
+      currentEditHataRevizeItemId = null;
+      document.getElementById('hata-revize-type').value     = type;
+      document.getElementById('hata-revize-card-id').value  = cardId;
+      document.getElementById('hata-revize-title').textContent = type === 'hata' ? 'Hata Ekle' : 'Revize Ekle';
+      document.getElementById('hata-revize-label').textContent = type === 'hata' ? 'Hata Tanımı' : 'Revize Tanımı';
+      const modal = document.getElementById('hata-revize-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeHataRevizeModal() {
+      stopMic();
+      const modal = document.getElementById('hata-revize-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.getElementById('hata-revize-form').reset();
+    }
+
+    // ─── Ses Tanıma (Speech Recognition) ───────────────────────────────
+    let micRecognition = null;
+    let micActive = false;
+    let micFinalText = '';
+
+    function stopMic() {
+      if (micRecognition && micActive) { micRecognition.stop(); }
+    }
+
+    function setMicState(active) {
+      micActive = active;
+      const btn   = document.getElementById('mic-btn');
+      const label = document.getElementById('mic-label');
+      const icon  = document.getElementById('mic-icon');
+      if (!btn) return;
+      if (active) {
+        btn.classList.add('bg-red-600/80', 'text-white', 'animate-pulse');
+        btn.classList.remove('bg-white/5', 'text-gray-300');
+        label.textContent = 'Dinliyor...';
+        icon.style.color = '#fff';
+      } else {
+        btn.classList.remove('bg-red-600/80', 'text-white', 'animate-pulse');
+        btn.classList.add('bg-white/5', 'text-gray-300');
+        label.textContent = 'Sesle Yaz';
+        icon.style.color = '';
+      }
+    }
+
+    function toggleMic() {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) {
+        alert('Bu tarayıcı ses tanıma özelliğini desteklemiyor. Lütfen Google Chrome kullanın.');
+        return;
+      }
+      if (micActive) { stopMic(); return; }
+
+      const textarea = document.getElementById('hata-revize-description');
+      micFinalText = textarea.value;
+
+      micRecognition = new SR();
+      micRecognition.lang = 'tr-TR';
+      micRecognition.continuous = false;
+      micRecognition.interimResults = true;
+
+      micRecognition.onstart = () => setMicState(true);
+
+      micRecognition.onresult = (e) => {
+        let interim = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+          if (e.results[i].isFinal) {
+            micFinalText += e.results[i][0].transcript;
+          } else {
+            interim += e.results[i][0].transcript;
+          }
+        }
+        textarea.value = micFinalText + interim;
+      };
+
+      micRecognition.onend = () => {
+        const textarea = document.getElementById('hata-revize-description');
+        if (textarea) textarea.value = micFinalText;
+        setMicState(false);
+      };
+
+      micRecognition.onerror = (e) => {
+        console.warn('Mic hata:', e.error);
+        setMicState(false);
+      };
+
+      micRecognition.start();
+    }
+
+    let hataRevizeItemCounter = 0;
+    let currentEditHataRevizeItemId = null;
+
+    function submitHataRevize(event) {
+      event.preventDefault();
+      const type   = document.getElementById('hata-revize-type').value;
+      const cardId = document.getElementById('hata-revize-card-id').value;
+      const desc   = document.getElementById('hata-revize-description').value.trim();
+      const isHata = type === 'hata';
+
+      if (currentEditHataRevizeItemId) {
+        const item = document.getElementById(currentEditHataRevizeItemId);
+        if (item) {
+          item.dataset.desc = desc;
+          item.querySelector('.hr-desc').textContent = desc;
+        }
+        currentEditHataRevizeItemId = null;
+        closeHataRevizeModal(); return;
+      }
+
+      hataRevizeItemCounter++;
+      const itemId = 'hr-item-' + hataRevizeItemCounter;
+      const containerId = (isHata ? 'hatalar-' : 'revizeler-') + cardId;
+      const list = document.getElementById(containerId);
+
+      const item = document.createElement('div');
+      item.id = itemId;
+      item.dataset.desc = desc;
+      item.dataset.type = type;
+      item.className = `flex items-center gap-2 text-xs p-2 rounded-lg ${isHata ? 'bg-red-900/30 border border-red-500/30' : 'bg-amber-900/30 border border-amber-500/30'} animate-fade`;
+      item.innerHTML = `
+        <span class="flex-shrink-0 ${isHata ? 'text-red-400' : 'text-amber-400'}">${isHata ? '⚠' : '↺'}</span>
+        <span class="hr-desc flex-1">${desc}</span>
+        <div class="flex gap-1 flex-shrink-0">
+          <button onclick="editHataRevizeItem('${itemId}')" class="p-1 hover:bg-white/10 rounded transition-all text-blue-400 hover:text-blue-300" title="Düzenle">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+          </button>
+          <button onclick="openItemDeleteModal('${itemId}')" class="p-1 hover:bg-white/10 rounded transition-all text-red-400 hover:text-red-300" title="Sil">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+          </button>
+        </div>
+      `;
+      list.appendChild(item);
+      closeHataRevizeModal();
+    }
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d34b4c312bcd602',t:'MTc3MTk5NjMyOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
