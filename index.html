@@ -51,7 +51,15 @@
      </div></div>
     </div>
    </div>
-  </nav><!-- Giriş Sayfası -->
+  </nav>
+  <!-- Bildirim Toast -->
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] transition-all duration-300 opacity-0 pointer-events-none" style="transform:translateX(-50%)">
+   <div id="toast-inner" class="bg-slate-800 border border-red-500/50 text-red-300 px-6 py-3 rounded-xl shadow-2xl text-sm font-medium flex items-center gap-2 whitespace-nowrap">
+    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.538-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+    <span id="toast-msg"></span>
+   </div>
+  </div>
+  <!-- Giriş Sayfası -->
   <div id="page-giris" class="page active">
    <div class="max-w-4xl mx-auto px-4 py-12">
     <div class="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-8 sm:p-12 animate-fade">
@@ -240,7 +248,7 @@
   <div id="page-idare" class="page">
    <div class="max-w-7xl mx-auto px-4 py-8">
     <h2 class="text-2xl font-bold mb-8 text-center bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">İdare Ekibi</h2>
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
      <div class="flex flex-col">
       <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:border-cyan-500/50 transition-all relative">
        <div class="flex flex-col items-center">
@@ -282,6 +290,20 @@
         </svg></button>
       </div>
       <div id="tasks-ahmet" class="mt-3 space-y-2"></div>
+     </div>
+     <div class="flex flex-col">
+      <div class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 hover:border-cyan-500/50 transition-all relative">
+       <div class="flex flex-col items-center">
+        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center font-bold text-2xl mb-4 ring-4 ring-teal-500/20">
+         BÇ
+        </div>
+        <h3 class="font-semibold text-lg">Bayram ÇATAL</h3>
+        <p class="text-sm text-gray-400 mt-1">İdari Personel</p>
+       </div><button onclick="openTaskModal('bayram', 'Bayram ÇATAL')" class="absolute bottom-4 right-4 bg-violet-600 hover:bg-violet-700 p-2 rounded-lg transition-all group">
+        <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg></button>
+      </div>
+      <div id="tasks-bayram" class="mt-3 space-y-2"></div>
      </div>
     </div>
    </div>
@@ -453,7 +475,7 @@
   </div>
   <!-- Hata/Revize Öğe Silme Onay Modalı -->
   <!-- Kullanıcı Giriş Modalı -->
-  <div id="login-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] hidden items-center justify-center">
+  <div id="login-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden items-center justify-center">
    <div class="bg-slate-900 rounded-2xl border border-white/20 p-8 w-full max-w-sm mx-4 animate-fade">
     <div class="flex items-center justify-between mb-6">
      <h3 class="text-xl font-semibold">Giriş Yap</h3>
@@ -635,12 +657,14 @@
       }
       currentLoggedInUser = { username, userId: cred.userId, user: users[cred.userId] };
       updateNavForLogin();
+      showToast(`Hoşgeldiniz, ${users[cred.userId]?.name || username}!`, 'success');
       closeLoginModal();
     }
 
     function doLogout() {
       currentLoggedInUser = null;
       updateNavForLogin();
+      showToast('Çıkış yapıldı.', 'success');
     }
 
     function updateNavForLogin() {
@@ -657,6 +681,71 @@
         loginBtn.classList.remove('hidden');
         userInfo.classList.remove('flex'); userInfo.classList.add('hidden');
       }
+      // nav action butonlarını da güncelle
+      const makineBtn  = document.getElementById('makine-ekle-nav-btn');
+      const servisBtn  = document.getElementById('servis-ekle-nav-btn');
+      const yazilimBtn = document.getElementById('yazilim-ekle-nav-btn');
+      if (makineBtn)  makineBtn.style.display  = (currentPage === 'makine'  && canEdit()) ? 'flex' : 'none';
+      if (servisBtn)  servisBtn.style.display  = (currentPage === 'servis'  && canEdit()) ? 'flex' : 'none';
+      if (yazilimBtn) yazilimBtn.style.display = (currentPage === 'yazilim' && canEdit()) ? 'flex' : 'none';
+    }
+
+    // ─── Yetki Sistemi ────────────────────────────────
+    window.openLoginModal  = openLoginModal;
+    window.closeLoginModal = closeLoginModal;
+    window.doLogin         = doLogin;
+    window.doLogout        = doLogout;
+    window.togglePasswordVisibility = togglePasswordVisibility;
+    const userPermissions = {
+      fatih:  ['all'],
+      furkan: ['kaynak', 'yonetim', 'idare', 'makine'],
+      tuncay: ['yonetim', 'idare'],
+      pinar:  ['yonetim', 'idare'],
+      hakan:  ['servis', 'makine'],
+      bayram: ['servis', 'makine'],
+    };
+    let currentPage = 'giris';
+
+    function canEdit() {
+      if (!currentLoggedInUser) return false;
+      const pages = userPermissions[currentLoggedInUser.userId];
+      if (!pages) return false;
+      if (pages[0] === 'all') return true;
+      return pages.includes(currentPage);
+    }
+
+    let _toastTimer = null;
+    function showToast(msg, type) {
+      const el = document.getElementById('toast');
+      const inner = document.getElementById('toast-inner');
+      const msgEl = document.getElementById('toast-msg');
+      if (!el) return;
+      msgEl.textContent = msg;
+      if (type === 'success') {
+        inner.className = 'bg-slate-800 border border-green-500/50 text-green-300 px-6 py-3 rounded-xl shadow-2xl text-sm font-medium flex items-center gap-2 whitespace-nowrap';
+      } else {
+        inner.className = 'bg-slate-800 border border-red-500/50 text-red-300 px-6 py-3 rounded-xl shadow-2xl text-sm font-medium flex items-center gap-2 whitespace-nowrap';
+      }
+      el.style.opacity = '1';
+      el.style.pointerEvents = 'none';
+      if (_toastTimer) clearTimeout(_toastTimer);
+      _toastTimer = setTimeout(() => { el.style.opacity = '0'; }, 3000);
+    }
+
+    function requireEdit() {
+      if (!currentLoggedInUser) {
+        showToast('Lütfen önce giriş yapın.');
+        openLoginModal();
+        return false;
+      }
+      if (!canEdit()) {
+        const uid = currentLoggedInUser.userId;
+        const pages = userPermissions[uid];
+        const pageNames = pages ? pages.join(', ') : 'yok';
+        showToast(`Bu sayfada düzenleyemezsiniz. (izinli: ${pageNames})`);
+        return false;
+      }
+      return true;
     }
 
     // Sidebar state
@@ -682,6 +771,7 @@
 
     // Page navigation
     function showPage(pageName) {
+      currentPage = pageName;
       // Hide all pages
       document.querySelectorAll('.page').forEach(page => {
         page.classList.remove('active');
@@ -705,9 +795,9 @@
       const makineBtn  = document.getElementById('makine-ekle-nav-btn');
       const servisBtn  = document.getElementById('servis-ekle-nav-btn');
       const yazilimBtn = document.getElementById('yazilim-ekle-nav-btn');
-      if (makineBtn)  makineBtn.style.display  = pageName === 'makine'  ? 'flex' : 'none';
-      if (servisBtn)  servisBtn.style.display  = pageName === 'servis'  ? 'flex' : 'none';
-      if (yazilimBtn) yazilimBtn.style.display = pageName === 'yazilim' ? 'flex' : 'none';
+      if (makineBtn)  makineBtn.style.display  = (pageName === 'makine'  && canEdit()) ? 'flex' : 'none';
+      if (servisBtn)  servisBtn.style.display  = (pageName === 'servis'  && canEdit()) ? 'flex' : 'none';
+      if (yazilimBtn) yazilimBtn.style.display = (pageName === 'yazilim' && canEdit()) ? 'flex' : 'none';
     }
 
     // ─── Canonical user ID mapping ──────────────────────────
@@ -717,6 +807,7 @@
       'dogan': 'dogan',  'yakup': 'yakup',
       'mehmet': 'mehmet', 'suleyman': 'suleyman',
       'fettah': 'fettah', 'elif': 'elif', 'ahmet': 'ahmet',
+      'bayram': 'bayram',
       'furkan': 'furkan', 'tuncay': 'tuncay', 'pinar': 'pinar'
     };
 
@@ -748,7 +839,7 @@
       mehmet:   { name: 'Mehmet YILDIZ',  initials: 'MY', gradient: 'from-amber-500 to-yellow-500',   role: 'Kaynak Teknisyeni' },
       suleyman: { name: 'Süleyman ÇINAR', initials: 'SÇ', gradient: 'from-red-500 to-orange-500',    role: 'Kaynak Teknisyeni' },
       fettah:   { name: 'Fettah GÜL',    initials: 'FG', gradient: 'from-cyan-500 to-blue-500',      role: 'İdari Müdür' },
-      bayram:   { name: 'Bayram',         initials: 'B',  gradient: 'from-teal-500 to-emerald-500',  role: 'İdari Personel' },
+      bayram:   { name: 'Bayram ÇATAL',   initials: 'BÇ', gradient: 'from-teal-500 to-emerald-500',  role: 'İdari Personel' },
       elif:     { name: 'Elif GÖKMEN',   initials: 'EG', gradient: 'from-indigo-500 to-purple-500',  role: 'İdari Personel' },
       ahmet:    { name: 'Ahmet YÜKSEL',  initials: 'AY', gradient: 'from-green-500 to-teal-500',    role: 'İdari Personel' },
       furkan:   { name: 'Furkan BIÇAK',  initials: 'FB', gradient: 'from-violet-500 to-purple-500',  role: 'Yönetici' },
@@ -840,6 +931,7 @@
     }
 
     function openTaskModal(pageUserId, userName) {
+      if (!requireEdit()) return;
       currentEditTaskId = null;
       document.getElementById('task-modal-title').textContent = 'Görev Ekle';
       document.getElementById('task-user-id').value = pageUserId;
@@ -860,6 +952,7 @@
     }
 
     function editTask(taskId) {
+      if (!requireEdit()) return;
       const canonicalId = getCanonicalOwnerOfTask(taskId);
       const task = taskStore[canonicalId]?.find(t => t.id === taskId);
       if (!task) return;
@@ -877,6 +970,7 @@
     }
 
     function openTaskDeleteModal(taskId) {
+      if (!requireEdit()) return;
       currentDeleteTaskId = taskId;
       const modal = document.getElementById('task-delete-modal');
       modal.classList.remove('hidden');
@@ -1228,6 +1322,7 @@
       currentEditServisId = null;
     }
     function editServis(cardId) {
+      if (!requireEdit()) return;
       const card = document.getElementById(cardId);
       if (!card) return;
       currentEditServisId = cardId;
@@ -1321,6 +1416,7 @@
       currentEditYazilimId = null;
     }
     function editYazilim(cardId) {
+      if (!requireEdit()) return;
       const card = document.getElementById(cardId);
       if (!card) return;
       currentEditYazilimId = cardId;
@@ -1414,6 +1510,7 @@
     }
 
     function editMakine(cardId) {
+      if (!requireEdit()) return;
       const card = document.getElementById(cardId);
       currentEditMakineId = cardId;
       document.getElementById('makine-seri').value  = card.dataset.seri;
@@ -1428,6 +1525,7 @@
     }
 
     function openMakineDeleteModal(cardId) {
+      if (!requireEdit()) return;
       currentDeleteMakineId = cardId;
       document.getElementById('makine-delete-password').value = '';
       document.getElementById('makine-delete-error').classList.add('hidden');
@@ -1540,6 +1638,7 @@
 
     // ─── Hata / Revize ────────────────────────────────────────
     function editHataRevizeItem(itemId) {
+      if (!requireEdit()) return;
       const item = document.getElementById(itemId);
       if (!item) return;
       currentEditHataRevizeItemId = itemId;
@@ -1555,6 +1654,7 @@
 
     let pendingDeleteItemId = null;
     function openItemDeleteModal(itemId) {
+      if (!requireEdit()) return;
       pendingDeleteItemId = itemId;
       const modal = document.getElementById('item-delete-modal');
       modal.classList.remove('hidden'); modal.classList.add('flex');
